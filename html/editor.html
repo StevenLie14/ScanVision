@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScanVision</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <header class="bg-gray-800 p-4 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <button onclick="redirectToDocument('{{ image.document_id }}')" class="flex text-purple-400 hover:text-purple-300 items-center">
+                <i class="fas fa-arrow-left text-xl"></i>
+            </button>
+            <h1 class="text-2xl text-center font-bold text-purple-400">Enhanced Image Editor</h1>
+        </div>
+        <button id="saveButton" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
+            Save Changes
+        </button>
+    </header>
+
+    <main class="container mx-auto p-4 space-y-6">
+        <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-gray-800 rounded-lg p-6 flex items-center space-x-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                <p class="text-lg">Processing image...</p>
+            </div>
+        </div>
+
+        <div class="relative bg-gray-800 rounded-lg p-4 flex justify-center items-center min-h-[300px] md:min-h-[500px]">
+            <img id="preview" src="{{ url_for('static', filename=image.path) }}" alt="Preview" class="max-w-full h-auto max-h-[70vh] object-contain">
+        </div>
+
+        <div class="relative">
+            <button id="scrollLeft" class="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-75 p-2 rounded-r-lg z-10 hover:bg-opacity-100">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button id="scrollRight" class="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-75 p-2 rounded-l-lg z-10 hover:bg-opacity-100">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+
+            <div id="filterContainer" class="overflow-x-auto pb-4 hide-scrollbar">
+                <div class="flex gap-4 px-8">
+                    <div class="filter-preview flex-none" data-filter="none">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img src="/placeholder.svg" alt="Original" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+                                Original
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-preview flex-none" data-filter="enhance">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img src="/placeholder.svg" alt="Enhance" class="w-full h-full object-cover brightness-110 contrast-110">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+                                Enhance
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-preview flex-none" data-filter="magic">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img src="/placeholder.svg" alt="Magic Pro" class="w-full h-full object-cover saturate-150 contrast-125">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+                                Magic Pro
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-preview flex-none" data-filter="brighten">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img src="/placeholder.svg" alt="Brighten" class="w-full h-full object-cover brightness-125">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+                                Brighten
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-preview flex-none" data-filter="noshadow">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img src="/placeholder.svg" alt="No Shadow" class="w-full h-full object-cover brightness-110 contrast-75">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+                                No Shadow
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-preview flex-none" data-filter="bw">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img src="/placeholder.svg" alt="B&W" class="w-full h-full object-cover grayscale">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+                                B&W
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-preview flex-none" data-filter="economy">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img src="/placeholder.svg" alt="Economy" class="w-full h-full object-cover sepia brightness-90">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+                                Economy
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-800 rounded-lg p-4 space-y-4">
+                <h2 class="text-xl font-semibold mb-4">Adjustments</h2>
+                <div class="space-y-2">
+                    <label for="brightness" class="block text-sm font-medium">Brightness</label>
+                    <input type="range" id="brightness" min="0" max="200" value="100" class="w-full">
+                </div>
+                <div class="space-y-2">
+                    <label for="contrast" class="block text-sm font-medium">Contrast</label>
+                    <input type="range" id="contrast" min="0" max="200" value="100" class="w-full">
+                </div>
+                <div class="space-y-2">
+                    <label for="saturation" class="block text-sm font-medium">Saturation</label>
+                    <input type="range" id="saturation" min="0" max="200" value="100" class="w-full">
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-lg p-4 space-y-4">
+                <h2 class="text-xl font-semibold mb-4">Transform</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="rotateLeft" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+                        <i class="fas fa-undo mr-2"></i>Rotate Left
+                    </button>
+                    <button id="rotateRight" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+                        <i class="fas fa-redo mr-2"></i>Rotate Right
+                    </button>
+                    <button id="flipHorizontal" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+                        <i class="fas fa-arrows-alt-h mr-2"></i>Flip Horizontal
+                    </button>
+                    <button id="flipVertical" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+                        <i class="fas fa-arrows-alt-v mr-2"></i>Flip Vertical
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-4">
+            <h2 class="text-xl font-semibold mb-4">Text Detection (OCR)</h2>
+            <button id="detectText" class="w-full bg-purple-600 hover:bg-purple-700 p-3 rounded-lg flex items-center justify-center">
+                <i class="fas fa-text-width mr-2"></i>
+                Detect Text in Image
+            </button>
+            <div id="ocrResult" class="mt-4 bg-gray-700 p-3 rounded-lg">
+                <p class="text-gray-300 text-sm">Detected text will appear here...</p>
+            </div>
+        </div>
+    </main>
+
+    <style>
+        .filter-preview {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .filter-preview:hover {
+            transform: scale(1.05);
+        }
+    </style>
+
+    <script>
+        const redirectToDocument = (docId) => {
+            window.location.href = `/docs/${docId}`
+        }
+        // Simple loading simulation
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('loading').classList.add('flex');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('loading').classList.remove('flex');
+        }
+
+        // Filter preview scrolling
+        const filterContainer = document.getElementById('filterContainer');
+        document.getElementById('scrollLeft').addEventListener('click', () => {
+            filterContainer.scrollBy({ left: -200, behavior: 'smooth' });
+        });
+        document.getElementById('scrollRight').addEventListener('click', () => {
+            filterContainer.scrollBy({ left: 200, behavior: 'smooth' });
+        });
+
+        // Apply filters
+        const preview = document.getElementById('preview');
+        document.querySelectorAll('.filter-preview').forEach(filterPreview => {
+            filterPreview.addEventListener('click', () => {
+                showLoading();
+                const filter = filterPreview.dataset.filter;
+                // Apply filter logic here
+                setTimeout(() => {
+                    preview.className = `max-w-full h-auto max-h-[70vh] object-contain ${getFilterClass(filter)}`;
+                    hideLoading();
+                }, 500);
+            });
+        });
+
+        function getFilterClass(filter) {
+            switch(filter) {
+                case 'enhance': return 'brightness-110 contrast-110';
+                case 'magic': return 'saturate-150 contrast-125';
+                case 'brighten': return 'brightness-125';
+                case 'noshadow': return 'brightness-110 contrast-75';
+                case 'bw': return 'grayscale';
+                case 'economy': return 'sepia brightness-90';
+                default: return '';
+            }
+        }
+
+        // Sliders
+        const sliders = ['brightness', 'contrast', 'saturation'];
+        sliders.forEach(slider => {
+            document.getElementById(slider).addEventListener('input', (e) => {
+                preview.style.filter = `
+                    brightness(${document.getElementById('brightness').value}%)
+                    contrast(${document.getElementById('contrast').value}%)
+                    saturate(${document.getElementById('saturation').value}%)
+                `;
+            });
+        });
+
+        // Transformations
+        let rotation = 0;
+        let flipH = 1, flipV = 1;
+
+        document.getElementById('rotateLeft').addEventListener('click', () => {
+            rotation = (rotation - 90) % 360;
+            applyTransform();
+        });
+
+        document.getElementById('rotateRight').addEventListener('click', () => {
+            rotation = (rotation + 90) % 360;
+            applyTransform();
+        });
+
+        document.getElementById('flipHorizontal').addEventListener('click', () => {
+            flipH *= -1;
+            applyTransform();
+        });
+
+        document.getElementById('flipVertical').addEventListener('click', () => {
+            flipV *= -1;
+            applyTransform();
+        });
+
+        function applyTransform() {
+            preview.style.transform = `rotate(${rotation}deg) scale(${flipH}, ${flipV})`;
+        }
+
+        // OCR simulation
+        document.getElementById('detectText').addEventListener('click', () => {
+            showLoading();
+            setTimeout(() => {
+                document.getElementById('ocrResult').innerHTML = '<p>Sample detected text: "Hello, World!"</p>';
+                hideLoading();
+            }, 1500);
+        });
+
+        // Save changes
+        document.getElementById('saveButton').addEventListener('click', () => {
+            showLoading();
+            setTimeout(() => {
+                alert('Changes saved successfully!');
+                hideLoading();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

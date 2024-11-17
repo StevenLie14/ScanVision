@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocVision - Documents</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ScanVision</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 </head>
 <body class="min-h-screen gradient-bg text-white">
     <header class="border-b border-purple-800 bg-black bg-opacity-50 backdrop-blur-md">
         <nav class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
-                <a href="/" class="text-purple-400 text-3xl font-bold transition-colors duration-300 hover:text-purple-300">DocVision</a>
+                <a href="/" class="text-purple-400 text-3xl font-bold transition-colors duration-300 hover:text-purple-300">ScanVision</a>
                 
                 <button id="menu-toggle" class="md:hidden text-purple-400 focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,104 +49,169 @@
         </nav>
     </header>
 
-    <main class="pt-20 container mx-auto px-4">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-            <h1 class="text-2xl font-bold">My Documents</h1>
-            <!-- <div class="flex space-x-4">
-                <button class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </button>
-                <button class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-                    </svg>
-                </button>
-            </div> -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">My Documents</h1>
+            <p class="text-purple-300">Manage and organize your documents</p>
         </div>
-        
-            
-        
 
-        <div class="space-y-4">
+        <!-- Upload Area -->
+        <div class="upload-area mb-8 rounded-xl border-2 border-dashed border-purple-500/30 transition-all duration-300">
+            <div class="flex flex-col items-center justify-center py-12 px-4">
+                <div class="mb-4 p-4 rounded-full bg-purple-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Upload Documents</h3>
+                <p class="text-purple-300 text-center mb-4">Drag and drop your files here or click to browse</p>
+                <button class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-300">
+                    Choose Files
+                </button>
+                <input type="file" class="hidden" id="file-upload" multiple>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% if docs_list %}
                 {% for doc in docs_list %}
-                    <div class="document-item bg-purple-900/10 rounded-lg overflow-hidden transition-colors duration-200">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center p-4 space-y-4 sm:space-y-0">
-                            <div class="w-full sm:w-20 h-40 sm:h-20 bg-purple-900/20 rounded-lg overflow-hidden flex-shrink-0">
-                                {% set first_image = doc.images.first() %}
-                                {% if first_image %}
-                                    <img src="{{ url_for('static', filename=first_image.path) }}" alt="Document preview" class="w-full h-full object-cover">
-                                {% else %}
-                                    <img src="/placeholder.svg" alt="Document preview" class="w-full h-full object-cover">
-                                {% endif %}
-
+                    <div class="document-preview bg-purple-900/10 rounded-xl overflow-hidden hover:bg-purple-900/20 transition-all duration-300">
+                        <div class="aspect-[4/3] bg-purple-900/20">
+                            {% set image = doc.images.first() %}
+                            {% if image %}
+                                <img src="{{ url_for('static', filename=image.path) }}" alt="Document preview" class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold">{{ doc.name }}</h3>
+                                <span class="text-xs text-purple-300 bg-purple-900/30 px-2 py-1 rounded">{{ doc.images.count()}} page</span>
                             </div>
-                            <div class="sm:ml-4 flex-grow">
-                                <h2 class="text-lg font-semibold">{{doc.name}}</h2>
-                                <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-purple-300 mt-1">
-                                    <span>Added : {{ doc.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
-                                    <span class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                        {{ doc.images.count() }} pages
-                                    </span>
-                                </div>
+                            <div class="flex items-center text-sm text-purple-300 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Added: {{ doc.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
                             </div>
-                            <div class="flex items-center space-x-2 sm:ml-4">
-                                <button onclick="redirectToDocument('{{ doc.id }}')" class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
+                            <div class="flex justify-end space-x-2">
+                                <button onclick="onEdit('{{ doc.id }}')" class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                     </svg>
                                 </button>
-                                <!-- <button class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
+                                <button onclick="onDelete('{{ doc.id }}')" class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors text-red-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                </button> -->
-                                <button onclick="deleteDocument('{{ doc.id }}')" class="p-1.5 hover:bg-purple-900/30 rounded-lg transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
                                 </button>
-
-                                <!-- <div class="w-5 h-5 flex items-center justify-center">
-                                    <input type="checkbox" class="w-4 h-4 rounded border-purple-500 text-purple-600 focus:ring-purple-500">
-                                </div> -->
                             </div>
                         </div>
                     </div>
                 {% endfor %}
-            {% else %}
-                <p>No documents found.</p>
             {% endif %}
         </div>
-
-        <button class="fixed bottom-8 right-8 bg-purple-600 hover:bg-purple-700 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-        </button>
     </main>
-</body>
-<script>
-    redirectToDocument = (docId) => {
-        window.location.href = `/docs/${docId}`
-    }
 
-    deleteDocument = (docId) => {
-        fetch(`/docs/${docId}`, {
-            method: 'DELETE',
-        }).then(response => {
-            return response.json();
-        }).then(data => {
-            console.log(data);
-            window.location.reload();
-        }).catch(error => {
-            console.error('Error:', error);
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                    {% for category, message in messages %}
+                        toastr["{{ category }}"]("{{ message }}");
+                    {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('menu').classList.toggle('hidden');
         });
-    }
-</script>
+        const onEdit = (docId) => {
+            window.location.href = `/docs/${docId}`;
+        };
+
+        const uploadArea = document.querySelector('.upload-area');
+        const fileInput = document.getElementById('file-upload');
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('border-purple-500/50');
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('border-purple-500/50');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('border-purple-500/50');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            e.preventDefault();
+            const files = e.target.files;
+            handleFiles(files);
+        });
+
+        const handleFiles = (files) => {
+            ([...files]).forEach(uploadFile);
+        }
+
+        function uploadFile(files) {
+            toastr.info('Uploading files...');
+            console.log(files)
+            
+           const formData = new FormData();
+            formData.append('file', files);
+            fetch('/docs/upload', {
+                method: 'POST',
+                body: formData,
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                window.location.reload();
+                console.log('File uploaded successfully:', data);
+                window.location.href = '/docs/' + data['id'];
+            }).catch(error => {
+                console.error('Error:', error);
+                toastr.error('Failed to upload file.');
+            });
+        }
+
+        function onDelete(docId) {
+            fetch(`/docs/${docId}`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(data => {
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
 </html>

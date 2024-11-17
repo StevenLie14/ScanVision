@@ -31,8 +31,10 @@ def create_app():
 
     from server.controllers.user_controller import user_controller
     from server.controllers.file_controller import file_controller
+    from server.controllers.image_controller import image_controller
     app.register_blueprint(user_controller, url_prefix='/auth')
     app.register_blueprint(file_controller, url_prefix='/docs')
+    app.register_blueprint(image_controller, url_prefix='/image')
 
     @login_manager.user_loader
     def load_user(user_id):

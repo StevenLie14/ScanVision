@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocVision - Advanced Document Filter</title>
+    <title>ScanVision</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -86,8 +86,8 @@
                                     <p class="text-purple-200">Image</p>
                                 </div>
                                 <div class="text-center p-4 bg-purple-800 bg-opacity-50 rounded-lg transition-transform duration-300 hover:scale-105">
-                                    <div class="text-3xl mb-2">📊</div>
-                                    <p class="text-purple-200">Data</p>
+                                    <div class="text-3xl mb-2">📄</div>
+                                    <p class="text-purple-200">PDF</p>
                                 </div>
                             </div>
                         </div>
@@ -229,7 +229,8 @@
     }
 
     function uploadFile(file) {
-        console.log('Uploading file:', file.name);
+        toastr.info('Uploading files...');
+
         const formData = new FormData();
         formData.append('file', file);
         fetch('/docs/upload', {

@@ -19,6 +19,7 @@ def file(id):
     if request.method == 'DELETE':
         docs = Document.query.filter_by(id = id).first()
         if not docs:
+            flash('Document not found', 'error')
             return jsonify({"message": "Document not found"}), 404
         db.session.delete(docs)
         db.session.commit()
@@ -26,8 +27,11 @@ def file(id):
             os.rmdir(os.path.join(folder_path, id))
         except FileNotFoundError:
             pass 
+        flash('Document deleted successfully', 'success')
         return jsonify({"message": "Document deleted successfully"}), 200
     docs= Document.query.filter_by(id = id).first()
+    if not docs:
+        return redirect(url_for('file_controller.docs_list'))
     return render_template('upload.html', docs=docs)
 
 @file_controller.route('/list', methods=['GET'])
@@ -42,10 +46,12 @@ def upload_file():
     from server.main import app
     from server.app import db
     if 'file' not in request.files:
+        flash('No file part', 'error')
         return jsonify({"error": "No file part"}), 400
     
     file = request.files['file']
     if file.filename == '':
+        flash('No selected file', 'error')
         return jsonify({"error": "No selected file"}), 400
 
     docs_uuid = str(uuid.uuid4())
@@ -71,7 +77,6 @@ def upload_file():
                 db.session.add(image)
         
         db.session.commit()
-
         return jsonify({"message": "File uploaded successfully", "id": docs_uuid}), 200
 
     elif file and file.filename.endswith('.jpg') or file.filename.endswith('.jpeg') or file.filename.endswith('.png'):
@@ -86,3 +91,62 @@ def upload_file():
 
     
     return jsonify({"error": "Unsupported file type"}), 400
+
+@file_controller.route('/add/<id>', methods=['POST'])
+def add_image(id):
+    from server.main import app
+    from server.app import db
+    if 'file' not in request.files:
+        flash('No file part', 'error')
+        return jsonify({"error": "No file part"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file', 'error')
+        return jsonify({"error": "No selected file"}), 400
+    
+    doc = Document.query.filter_by(id=id).first()
+    if not doc:
+        flash('Document not found', 'error')
+        return jsonify({"error": "Document not found"}), 404
+
+    if not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'],id)):
+        os.mkdir(os.path.join(app.config['UPLOAD_FOLDER'],id))
+        
+    doc.updated_at = datetime.now()
+    
+    index = doc.images.count()
+        
+    if file and file.filename.endswith('.pdf'):
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'],id,'/', file.filename)
+        file.save(filepath)
+
+        with fitz.open(filepath) as pdf:
+            for page_number, page in enumerate(pdf, start=1):
+                pix = page.get_pixmap()
+                img_uuid = str(uuid.uuid4())
+                
+                file_path = f"{app.config['UPLOAD_FOLDER']}{id}/{img_uuid}.png"
+                image_path = f"{folder_path}{id}/{img_uuid}.png"
+                pix.save(file_path)
+                index+=1
+                image = Image(id=img_uuid,document_id=id, path=image_path, file_number=index, created_at=datetime.now(),updated_at=datetime.now())
+                db.session.add(image)
+        
+        db.session.commit()
+        return jsonify({"message": "File uploaded successfully", "id": id}), 200
+
+    if file and file.filename.endswith('.jpg') or file.filename.endswith('.jpeg') or file.filename.endswith('.png'):
+        img_uuid = str(uuid.uuid4())
+        file_path = f"{app.config['UPLOAD_FOLDER']}{id}/{img_uuid}.png"
+        image_path = f"{folder_path}{id}/{img_uuid}.png"
+        file.save(file_path)
+        index+=1
+        image = Image(id=img_uuid,document_id=id, path=image_path, file_number=index, created_at=datetime.now(),updated_at=datetime.now())
+        db.session.add(image)
+        db.session.commit()
+        return jsonify({"message": "File uploaded successfully", "id": id}), 200
+
+    return jsonify({"error": "Unsupported file type"}), 400
+    
+    
