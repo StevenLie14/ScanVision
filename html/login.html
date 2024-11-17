@@ -1,45 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocVision - Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-    <div class="container">
-        <h1>DocVision</h1>
-        <form action="/auth/login" method="POST">
-            <div class="input-group">
-                <input type="email" id="email" placeholder=" " name="email">
-                <label for="email">Email</label>
+<body class="min-h-screen bg-gradient-to-br from-gray-900 via-purple-950 to-gray-900 flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <div class="bg-gray-900/60 shadow-xl rounded-2xl backdrop-blur-sm p-8 space-y-8 animate-fadeIn">
+            <div class="text-center space-y-2">
+                <h1 class="text-3xl font-bold text-white">
+                    <span class="text-docvision">Doc</span>Vision
+                </h1>
+                <p class="text-gray-400 text-sm">Sign in to your account</p>
             </div>
-            <div class="input-group">
-                <input type="password" id="password" placeholder=" " name="password">
-                <label for="password">Password</label>
+
+            <form class="space-y-6" id="loginForm" action="/auth/login" method="POST">
+                <div class="space-y-4">
+                    <div class="relative">
+                        <input id="email" name="email" type="email"  
+                               class="input-field w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 text-white rounded-lg 
+                                      focus:ring-2 focus:ring-docvision focus:border-docvision transition duration-300 ease-in-out
+                                      peer placeholder-transparent"
+                               placeholder="Email" />
+                        <label for="email" class="floating-label peer-focus:text-docvision">Email address</label>
+                    </div>
+                    <div class="relative">
+                        <input id="password" name="password" type="password"  
+                               class="input-field w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 text-white rounded-lg 
+                                      focus:ring-2 focus:ring-docvision focus:border-docvision transition duration-300 ease-in-out
+                                      peer placeholder-transparent"
+                               placeholder="Password" />
+                        <label for="password" class="floating-label peer-focus:text-docvision">Password</label>
+                    </div>
+                </div>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div id="error-messages" class="space-y-2">
+                            {% for category, message in messages %}
+                                <div class="flex items-center space-x-3 p-3 rounded-lg 
+                                            {% if category == 'error' %}
+                                                bg-red-500/10 text-red-400 border border-red-500
+                                            {% else %}
+                                                bg-green-500/10 text-green-400 border border-green-500
+                                            {% endif %}
+                                            animate-slideDown">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 
+                                        {% if category == 'error' %}text-red-500{% else %}text-green-500{% endif %}" 
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        {% if category == 'error' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M12 2L2 22h20L12 2z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M12 10v4" /> 
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M12 17h0" />
+                                        {% else %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M5 13l4 4L19 7" />
+                                        {% endif %}
+                                    </svg>
+                                    <p class="text-sm">{{ message }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                <button type="submit" 
+                        class="w-full bg-docvision text-white rounded-lg px-4 py-2.5 font-semibold 
+                               hover:bg-docvision/80 focus:outline-none focus:ring-2 focus:ring-docvision/50 
+                               transition duration-300 ease-in-out transform hover:scale-105">
+                    Sign in
+                </button>
+            </form>
+
+            <div class="text-center text-sm">
+                <p class="text-gray-400">
+                    Don't have an account?
+                    <a href="/auth/register" class="text-docvision hover:underline ml-1 transition duration-300 ease-in-out">Create one now</a>
+                </p>
             </div>
-            <button type="submit">Login</button>
-        </form>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        <div class="links">
-            <a href="/auth/register">Don't have an account? Register!!</a>
         </div>
     </div>
 </body>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const messages = document.querySelectorAll('.error, .success');
-        const container = document.querySelector('.container');
-        if (messages.length > 0) {
-            container.classList.add('with-message');
-        }
-    });
-</script>
 </html>

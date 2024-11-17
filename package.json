@@ -8,6 +8,12 @@
   },
   "scripts": {
     "build:css": "npx tailwindcss -i ./static/css/tailwind.css -o ./static/css/style.css --watch"
-  }
-
+  },
+  "name": "code",
+  "version": "1.0.0",
+  "main": "postcss.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
