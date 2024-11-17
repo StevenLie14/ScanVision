@@ -1,9 +1,15 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required,current_user
-from server.models.user import User,db
+from server.models.user import User
+from server.app import db
 from werkzeug.security import check_password_hash, generate_password_hash
 
 user_controller = Blueprint('user_controller', __name__)  
+
+
+@user_controller.route('/')
+def index():
+    return render_template('home.html')
 
 @user_controller.route('/login', methods=['GET', 'POST'])
 def login():
@@ -16,8 +22,6 @@ def login():
             return redirect(url_for('user_controller.login'))
         
         user = User.query.filter_by(email=email).first()
-        
-        
 
         if user and check_password_hash(user.password, password):
             login_user(user)  

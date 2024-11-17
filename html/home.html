@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DocVision - Advanced Document Filter</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        .float { animation: float 3s ease-in-out infinite; }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
 </head>
 <body class="bg-gradient-to-br from-gray-900 via-purple-950 to-black min-h-screen text-white">
     <div class="fixed inset-0 bg-black opacity-50 pointer-events-none"></div>
@@ -74,9 +70,9 @@
                                 <label for="file-upload" class="cursor-pointer">
                                     <div class="text-6xl mb-4">📄</div>
                                     <p class="text-gray-300 mb-4">Drag and drop your file here or click to browse</p>
-                                    <button type="button" id="camera-button" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-300">
+                                    <!-- <button type="button" id="camera-button" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-300">
                                         📷 Use Camera
-                                    </button>
+                                    </button> -->
                                 </label>
                             </div>
                             <div class="grid grid-cols-3 gap-4 mt-6">
@@ -137,83 +133,122 @@
                         <a href="#" class="text-purple-300 hover:text-purple-100 transition-colors duration-300">FAQ</a>
                     </div>
                     <div class="flex gap-4">
-                        <a href="#" class="text-2xl transition-transform duration-300 hover:scale-110">
-                            <img class="w-8 h-8" src="{{ url_for('static', filename='images/instagram.png') }}" alt="">
+                        <a href="https://www.instagram.com/stevenlie_41/" class="text-2xl transition-transform duration-300 hover:scale-110" target="_blank">
+                            <img class="w-8 h-8" src="{{ url_for('static', filename='assets/instagram.png') }}" alt="">
+                        </a>
+                        <a href="https://github.com/StevenLie14" class="text-2xl transition-transform duration-300 hover:scale-110">
+                            <img class="w-8 h-8" src="{{ url_for('static', filename='assets/github.png') }}" alt="">
+                        </a>
+                        <a href="https://www.linkedin.com/in/steven-liementha-9560a4285/" class="text-2xl transition-transform duration-300 hover:scale-110">
+                            <img class="w-8 h-8" src="{{ url_for('static', filename='assets/linkedin.png') }}" alt="">
                         </a>
                         <a href="#" class="text-2xl transition-transform duration-300 hover:scale-110">
-                            <img class="w-8 h-8" src="{{ url_for('static', filename='images/youtube.png') }}" alt="">
-                        </a>
-                        <a href="#" class="text-2xl transition-transform duration-300 hover:scale-110">
-                            <img class="w-8 h-8" src="{{ url_for('static', filename='images/linkedin.png') }}" alt="">
-                        </a>
-                        <a href="#" class="text-2xl transition-transform duration-300 hover:scale-110">
-                            <img class="w-8 h-8" src="{{ url_for('static', filename='images/instagram.png') }}" alt="">
+                            <img class="w-8 h-8" src="{{ url_for('static', filename='assets/instagram.png') }}" alt="">
                         </a>
                     </div>
                 </div>
             </div>
         </footer>
     </div>
-    <script>
-        document.getElementById('menu-toggle').addEventListener('click', function() {
-            document.getElementById('menu').classList.toggle('hidden');
-        });
 
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('file-upload');
-        const cameraButton = document.getElementById('camera-button');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight() {
-            dropArea.classList.add('bg-purple-900', 'bg-opacity-25');
-        }
-
-        function unhighlight() {
-            dropArea.classList.remove('bg-purple-900', 'bg-opacity-25');
-        }
-
-        dropArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
-
-        function handleFiles(files) {
-            ([...files]).forEach(uploadFile);
-        }
-
-        function uploadFile(file) {
-            console.log('Uploading file:', file.name);
-        }
-
-        cameraButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            fileInput.setAttribute('capture', 'environment');
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', function(e) {
-            const files = e.target.files;
-            handleFiles(files);
-        });
-    </script>
 </body>
+<script>
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+                {% for category, message in messages %}
+                    toastr["{{ category }}"]("{{ message }}");
+                {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+</script>
+<script>
+    
+    
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+        document.getElementById('menu').classList.toggle('hidden');
+    });
+
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('file-upload');
+    const cameraButton = document.getElementById('camera-button');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+        dropArea.classList.add('bg-purple-900', 'bg-opacity-25');
+    }
+
+    function unhighlight() {
+        dropArea.classList.remove('bg-purple-900', 'bg-opacity-25');
+    }
+
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+    }
+
+    function handleFiles(files) {
+        ([...files]).forEach(uploadFile);
+    }
+
+    function uploadFile(file) {
+        console.log('Uploading file:', file.name);
+        const formData = new FormData();
+        formData.append('file', file);
+        fetch('/upload/process', {
+            method: 'POST',
+            body: formData,
+        }).then(response => {
+                return response.json();
+        }).then(data => {
+            console.log('File uploaded successfully:', data);
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+
+    }
+
+
+
+    fileInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        handleFiles(files);
+    });
+</script>
 </html>
