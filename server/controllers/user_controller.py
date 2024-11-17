@@ -7,9 +7,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 user_controller = Blueprint('user_controller', __name__)  
 
 
-@user_controller.route('/')
-def index():
-    return render_template('home.html')
+
 
 @user_controller.route('/login', methods=['GET', 'POST'])
 def login():

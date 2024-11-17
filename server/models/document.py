@@ -9,6 +9,7 @@ class Document(db.Model):
     name = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False)
     updated_at = db.Column(db.DateTime, nullable=False)
+    images = db.relationship('Image', backref='document', lazy='dynamic', cascade='all, delete-orphan',order_by='Image.file_number')
     
     def __repr__(self):
         return f'<Document {self.name}>'

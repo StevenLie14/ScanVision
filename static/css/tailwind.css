@@ -34,7 +34,21 @@
     @apply -translate-y-5 scale-75 text-docvision bg-gray-900 px-1;
 }
 
+.gradient-bg {
+    background: linear-gradient(135deg, #1a1a2e 0%, #2a1a4a 50%, #1a1a2e 100%);
+}
+.card-hover {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
 
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(91, 33, 182, 0.2);
+}
+
+.document-item:hover {
+    background: rgba(139, 92, 246, 0.05);
+}
 
 ::-webkit-scrollbar {
     width: 6px; 

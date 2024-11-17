@@ -26,8 +26,9 @@
 
                     <div id="menu" class="hidden md:block absolute md:relative top-16 md:top-0 left-0 right-0 bg-gray-900 md:bg-transparent">
                         <div class="flex flex-col md:flex-row md:items-center gap-4 p-4 md:p-0">
-                            <a href="#" class="hover:text-purple-400 transition-colors">Contact</a>
-                            <a href="#" class="hover:text-purple-400 transition-colors">History</a>
+                            {% if current_user.is_authenticated %}
+                                <a href="/docs/list" class="hover:text-purple-400 transition-colors">Documents</a>
+                            {% endif %}
                             <!-- <a href="#contact" class="text-purple-300 hover:text-purple-100 transition-colors duration-300">Contact</a> -->
                             <!-- <a href="#history" class="text-purple-300 hover:text-purple-100 transition-colors duration-300">History</a> -->
                             
@@ -231,13 +232,14 @@
         console.log('Uploading file:', file.name);
         const formData = new FormData();
         formData.append('file', file);
-        fetch('/upload/process', {
+        fetch('/docs/upload', {
             method: 'POST',
             body: formData,
         }).then(response => {
                 return response.json();
         }).then(data => {
             console.log('File uploaded successfully:', data);
+            window.location.href = '/docs/' + data['id'];
         }).catch(error => {
             console.error('Error:', error);
         });

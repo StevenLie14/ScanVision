@@ -39,6 +39,9 @@ def create_app():
         from server.models.user import User
         return User.query.get(user_id)
 
+    @app.route('/')
+    def index():
+        return render_template('home.html')
     return app
 
 
