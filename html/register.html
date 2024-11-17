@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocVision - Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>DocVision</h1>
+        <form action="/auth/register" method="POST" >
+            <div class="input-group">
+                <input type="text" id="fullname" placeholder=" " name="fullname">
+                <label for="fullname">Full Name</label>
+            </div>
+            <div class="input-group">
+                <input type="email" id="email" placeholder=" " name="email">
+                <label for="email">Email</label>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder=" " name="password">
+                <label for="password">Password</label>
+            </div>
+            <div class="input-group">
+                <input type="password" id="confirm-password" name="confirm-password" placeholder=" ">
+                <label for="confirm-password">Confirm Password</label>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="links">
+            <a href="/auth/login">Already have an account? Login!!</a>
+        </div>
+    </div>
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const messages = document.querySelectorAll('.error, .success');
+        const container = document.querySelector('.container');
+        if (messages.length > 0) {
+            container.classList.add('with-message');
+        }
+    });
+</script>
+</html>
