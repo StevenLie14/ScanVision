@@ -6,14 +6,17 @@
     <title>ScanVision</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
     <header class="bg-gray-800 p-4 flex justify-between items-center">
         <div class="flex items-center gap-4">
             <button onclick="redirectToDocument('{{ image.document_id }}')" class="flex text-purple-400 hover:text-purple-300 items-center">
-                <i class="fas fa-arrow-left text-xl"></i>
+                <i class="fas fa-arrow-left text-2xl"></i>
             </button>
-            <h1 class="text-2xl text-center font-bold text-purple-400">Enhanced Image Editor</h1>
+            <h1 class="text-2xl text-center items-center font-bold text-purple-400">Enhanced Image Editor</h1>
         </div>
         <button id="saveButton" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
             Save Changes
@@ -29,7 +32,7 @@
         </div>
 
         <div class="relative bg-gray-800 rounded-lg p-4 flex justify-center items-center min-h-[300px] md:min-h-[500px]">
-            <img id="preview" src="{{ url_for('static', filename=image.path) }}" alt="Preview" class="max-w-full h-auto max-h-[70vh] object-contain">
+            <img id="preview" src="{{ url_for('static', filename=image.path) }}?filter=filter" alt="Preview" class="max-w-full object-contain">
         </div>
 
         <div class="relative">
@@ -42,9 +45,9 @@
 
             <div id="filterContainer" class="overflow-x-auto pb-4 hide-scrollbar">
                 <div class="flex gap-4 px-8">
-                    <div class="filter-preview flex-none" data-filter="none">
+                    <div class="filter-preview flex-none" data-filter="original">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img src="/placeholder.svg" alt="Original" class="w-full h-full object-cover">
+                            <img id="original" src="/placeholder.svg" alt="Original" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Original
                             </div>
@@ -52,7 +55,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="enhance">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img src="/placeholder.svg" alt="Enhance" class="w-full h-full object-cover brightness-110 contrast-110">
+                            <img id="enhance" src="/placeholder.svg" alt="Enhance" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Enhance
                             </div>
@@ -60,7 +63,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="magic">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img src="/placeholder.svg" alt="Magic Pro" class="w-full h-full object-cover saturate-150 contrast-125">
+                            <img id="magic" src="/placeholder.svg" alt="Magic Pro" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Magic Pro
                             </div>
@@ -68,7 +71,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="brighten">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img src="/placeholder.svg" alt="Brighten" class="w-full h-full object-cover brightness-125">
+                            <img id="brighten" src="/placeholder.svg" alt="Brighten" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Brighten
                             </div>
@@ -76,7 +79,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="noshadow">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img src="/placeholder.svg" alt="No Shadow" class="w-full h-full object-cover brightness-110 contrast-75">
+                            <img id="noshadow" src="/placeholder.svg" alt="No Shadow" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 No Shadow
                             </div>
@@ -84,7 +87,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="bw">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img src="/placeholder.svg" alt="B&W" class="w-full h-full object-cover grayscale">
+                            <img id="bw" src="/placeholder.svg" alt="B&W" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 B&W
                             </div>
@@ -92,7 +95,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="economy">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img src="/placeholder.svg" alt="Economy" class="w-full h-full object-cover sepia brightness-90">
+                            <img id="economy" src="/placeholder.svg" alt="Economy" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Economy
                             </div>
@@ -102,26 +105,17 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 ">
             <div class="bg-gray-800 rounded-lg p-4 space-y-4">
-                <h2 class="text-xl font-semibold mb-4">Adjustments</h2>
+                <h2 class="text-xl font-semibold mb-4">Histogram</h2>
                 <div class="space-y-2">
-                    <label for="brightness" class="block text-sm font-medium">Brightness</label>
-                    <input type="range" id="brightness" min="0" max="200" value="100" class="w-full">
-                </div>
-                <div class="space-y-2">
-                    <label for="contrast" class="block text-sm font-medium">Contrast</label>
-                    <input type="range" id="contrast" min="0" max="200" value="100" class="w-full">
-                </div>
-                <div class="space-y-2">
-                    <label for="saturation" class="block text-sm font-medium">Saturation</label>
-                    <input type="range" id="saturation" min="0" max="200" value="100" class="w-full">
+                    <img id="histogram" src="{{ url_for('image_controller.histogram', id = image.id)}}" alt="" class="w-full h-full max-h-[300px] object-contain">
                 </div>
             </div>
 
             <div class="bg-gray-800 rounded-lg p-4 space-y-4">
                 <h2 class="text-xl font-semibold mb-4">Transform</h2>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4">
                     <button id="rotateLeft" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
                         <i class="fas fa-undo mr-2"></i>Rotate Left
                     </button>
@@ -138,33 +132,29 @@
             </div>
         </div>
 
-        <div class="bg-gray-800 rounded-lg p-4">
-            <h2 class="text-xl font-semibold mb-4">Text Detection (OCR)</h2>
-            <button id="detectText" class="w-full bg-purple-600 hover:bg-purple-700 p-3 rounded-lg flex items-center justify-center">
-                <i class="fas fa-text-width mr-2"></i>
-                Detect Text in Image
-            </button>
-            <div id="ocrResult" class="mt-4 bg-gray-700 p-3 rounded-lg">
-                <p class="text-gray-300 text-sm">Detected text will appear here...</p>
-            </div>
-        </div>
     </main>
 
-    <style>
-        .filter-preview {
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .filter-preview:hover {
-            transform: scale(1.05);
-        }
-    </style>
-
     <script>
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
         const redirectToDocument = (docId) => {
             window.location.href = `/docs/${docId}`
         }
-        // Simple loading simulation
         function showLoading() {
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('loading').classList.add('flex');
@@ -175,7 +165,6 @@
             document.getElementById('loading').classList.remove('flex');
         }
 
-        // Filter preview scrolling
         const filterContainer = document.getElementById('filterContainer');
         document.getElementById('scrollLeft').addEventListener('click', () => {
             filterContainer.scrollBy({ left: -200, behavior: 'smooth' });
@@ -184,88 +173,51 @@
             filterContainer.scrollBy({ left: 200, behavior: 'smooth' });
         });
 
-        // Apply filters
         const preview = document.getElementById('preview');
+        let activeFilter = 'original';
         document.querySelectorAll('.filter-preview').forEach(filterPreview => {
+            const filter = filterPreview.dataset.filter;
+            document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}`;
             filterPreview.addEventListener('click', () => {
                 showLoading();
-                const filter = filterPreview.dataset.filter;
-                // Apply filter logic here
-                setTimeout(() => {
-                    preview.className = `max-w-full h-auto max-h-[70vh] object-contain ${getFilterClass(filter)}`;
-                    hideLoading();
-                }, 500);
+                activeFilter = filter;
+                preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}`;
+                const histogram = document.getElementById('histogram');
+                histogram.src = `{{ url_for('image_controller.histogram', id = image.id) }}?filter=${filter}`;
+                let imagesLoaded = 0;
+
+                const handleLoad = () => {
+                    imagesLoaded++;
+                    if (imagesLoaded === 2) {
+                        hideLoading();
+                    }
+                };
+
+                preview.onload = handleLoad;
+                histogram.onload = handleLoad;
             });
         });
 
-        function getFilterClass(filter) {
-            switch(filter) {
-                case 'enhance': return 'brightness-110 contrast-110';
-                case 'magic': return 'saturate-150 contrast-125';
-                case 'brighten': return 'brightness-125';
-                case 'noshadow': return 'brightness-110 contrast-75';
-                case 'bw': return 'grayscale';
-                case 'economy': return 'sepia brightness-90';
-                default: return '';
-            }
-        }
 
-        // Sliders
-        const sliders = ['brightness', 'contrast', 'saturation'];
-        sliders.forEach(slider => {
-            document.getElementById(slider).addEventListener('input', (e) => {
-                preview.style.filter = `
-                    brightness(${document.getElementById('brightness').value}%)
-                    contrast(${document.getElementById('contrast').value}%)
-                    saturate(${document.getElementById('saturation').value}%)
-                `;
-            });
-        });
 
-        // Transformations
-        let rotation = 0;
-        let flipH = 1, flipV = 1;
-
-        document.getElementById('rotateLeft').addEventListener('click', () => {
-            rotation = (rotation - 90) % 360;
-            applyTransform();
-        });
-
-        document.getElementById('rotateRight').addEventListener('click', () => {
-            rotation = (rotation + 90) % 360;
-            applyTransform();
-        });
-
-        document.getElementById('flipHorizontal').addEventListener('click', () => {
-            flipH *= -1;
-            applyTransform();
-        });
-
-        document.getElementById('flipVertical').addEventListener('click', () => {
-            flipV *= -1;
-            applyTransform();
-        });
-
-        function applyTransform() {
-            preview.style.transform = `rotate(${rotation}deg) scale(${flipH}, ${flipV})`;
-        }
-
-        // OCR simulation
-        document.getElementById('detectText').addEventListener('click', () => {
-            showLoading();
-            setTimeout(() => {
-                document.getElementById('ocrResult').innerHTML = '<p>Sample detected text: "Hello, World!"</p>';
-                hideLoading();
-            }, 1500);
-        });
-
-        // Save changes
         document.getElementById('saveButton').addEventListener('click', () => {
             showLoading();
-            setTimeout(() => {
-                alert('Changes saved successfully!');
+
+
+            fetch(`/image/{{ image.id }}?filter=${activeFilter}`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
                 hideLoading();
-            }, 1000);
+                toastr.success('Image saved successfully');
+            })
+            .catch(error => {
+                hideLoading();
+                toastr.error('Error saving image');
+                console.error('Error:', error);
+            });
+            
         });
     </script>
 </body>

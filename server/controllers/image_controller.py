@@ -1,28 +1,77 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash,jsonify
-from flask_login import login_user, logout_user, login_required,current_user
+from flask import Blueprint, render_template, request, redirect, url_for, flash,jsonify, send_file
+from flask_login import login_required
 from datetime import datetime
 from server.models.document import Document
 from server.models.image import Image
-from server.models.user import User
 from server.app import db
-import fitz
+from matplotlib import pyplot as plt
 import uuid
+import numpy as np
+import io
+from io import BytesIO
 import os
+import cv2
+import pytesseract
+from pytesseract import Output
+from paddleocr import PaddleOCR, draw_ocr
+from PIL import Image as Pil_Image
+import base64
 
 
 image_controller = Blueprint('image_controller', __name__)
 folder_path = os.getenv('IMAGE_FOLDER')
 
-@image_controller.route('/<id>', methods=['GET', 'DELETE'])
+
+def getFilteredImage(image, filter_type):
+    filtered_img = image
+    if filter_type == 'enhance':
+        filtered_img = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        filtered_img[:, :, 0] = cv2.equalizeHist(filtered_img[:, :, 0])
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_LAB2BGR)
+    elif filter_type == 'grayscale':
+        filtered_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
+    elif filter_type == 'original':
+        filtered_img = image
+    return filtered_img
+    
+    
+@image_controller.route('/<id>', methods=['GET', 'DELETE','POST'])
 @login_required
 def edit(id):
+    from server.main import app
+    if request.method == 'POST':
+        image = Image.query.filter_by(id=id).first()
+        if not image:
+            return jsonify({"message": "Image not found"}), 404
+        
+        image_path = os.path.join('static', image.path)
+        
+        if not os.path.exists(image_path):
+            return jsonify({"message": "Image not found"}), 404
+        
+        
+        filtered_img = getFilteredImage(cv2.imread(image_path), request.args.get('filter'))
+        
+        
+        cv2.imwrite(image_path, filtered_img)
+        
+        image.updated_at = datetime.now()
+        db.session.add(image)
+        db.session.commit()
+        
+        return jsonify({"message": "Image updated successfully"}), 200
     if request.method == 'DELETE':
         image = Image.query.filter_by(id=id).first()
         if not image:
             flash('Image not found', 'error')
             return jsonify({"message": "Image not found"}), 404
         
+        if os.path.exists(os.path.join('static', image.path)):
+            os.remove(os.path.join('static', image.path))
+            
         document = Document.query.filter_by(id=image.document_id).first()
+        
         
         db.session.delete(image)
         db.session.commit()
@@ -31,6 +80,11 @@ def edit(id):
         if not remaining_images:
             db.session.delete(document)
             db.session.commit()
+            print(os.path.join('static',folder_path, document.id))
+            
+            if os.path.exists(os.path.join('static',folder_path, document.id)):
+                os.rmdir(os.path.join('static',folder_path, document.id))
+                
             flash('Document deleted successfully', 'success')
             return jsonify({"message": "Document deleted successfully"}), 200
         
@@ -46,8 +100,110 @@ def edit(id):
     image = Image.query.filter_by(id=id).first()
     if not image:
         return redirect(url_for('file_controller.docs_list'))
-    return render_template('editor.html', image=image)
+    return render_template('editor.html', image=image,id=id)
 
 
 
+@image_controller.route('filter/<id>', methods=['GET'])
+@login_required
+def image_filter(id):
+    image = Image.query.filter_by(id=id).first()
+    if not image:
+        return jsonify({"message": "Image not found"}), 404
+    
+    image_path = os.path.join('static', image.path)
+
+    if not os.path.exists(image_path):
+        return jsonify({"message": "Image not found"}), 404
+        
+    img = cv2.imread(image_path)
+    if img is None:
+        return jsonify({"message": "Image not found"}), 404
+    
+    filter_type = request.args.get('filter')
+    filtered_img = getFilteredImage(img, filter_type)
+    
+    _, buffer = cv2.imencode('.jpg', filtered_img)
+    img_io = io.BytesIO(buffer)
+    
+    return send_file(img_io, mimetype='image/jpeg')
+
+@image_controller.route('histogram/<id>', methods=['GET'])
+@login_required
+def histogram(id):
+    image = Image.query.filter_by(id=id).first()
+    if not image:
+        return jsonify({"message": "Image not found"}), 404
+    
+    image_path = os.path.join('static', image.path)
+
+    if not os.path.exists(image_path):
+        return jsonify({"message": "Image not found"}), 404
+        
+    img = cv2.imread(image_path)
+    if img is None:
+        return jsonify({"message": "Image not found"}), 404
+    
+    filter_type = request.args.get('filter')
+    filtered_img = getFilteredImage(img, filter_type)
+
+    gray = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
+    h = img.shape[0]
+    w = img.shape[1]
+
+    gray_counter = np.zeros(256, dtype=int)
+    for i in range(h):
+        for j in range(w):
+            gray_counter[gray[i][j]] += 1
+            
+    plt.plot(gray_counter)
+    plt.ylabel('quantity')
+    plt.xlabel('intensity')
+    plt.axis([0, 256, 0, gray_counter.max()])
+
+    img_buffer = BytesIO()
+    plt.savefig(img_buffer, format='jpg')
+    img_buffer.seek(0)
+    plt.close()
+    
+    return send_file(img_buffer, mimetype='image/jpeg')
+
+
+
+
+@image_controller.route('ocr/<id>', methods=['GET'])
+@login_required
+def ocr(id):
+    image = Image.query.filter_by(id=id).first()
+    if not image:
+        return jsonify({"message": "Image not found"}), 404
+
+    image_path = os.path.join('static', image.path)
+    if not os.path.exists(image_path):
+        return jsonify({"message": "Image not found"}), 404
+
+    ocr = PaddleOCR()
+
+    result = ocr.ocr(image_path)
+
+    boxes = [line[0] for line in result[0]]  
+    txts = [line[1][0] for line in result[0]] 
+
+    img = Pil_Image.open(image_path).convert('RGB')
+    img_array = np.array(img)
+    for box in boxes:
+        points = np.array(box, dtype=np.int32)
+        cv2.polylines(img_array, [points], isClosed=True, color=(0, 255, 0), thickness=2)
+    # im_show = draw_ocr(np.array(img), boxes, txts, scores, font_path='C:/Windows/Fonts/Arial.ttf')
+
+    im_show = Pil_Image.fromarray(img_array)
+    im_show = cv2.cvtColor(np.array(im_show), cv2.COLOR_RGB2BGR)
+
+    _, buffer = cv2.imencode('.jpg', im_show)
+    img_io = io.BytesIO(buffer)
+
+    return render_template('ocr.html', ocr_img=base64.b64encode(img_io.getvalue()).decode('utf-8'), ocr_text=txts, ocr_box=boxes,image=image)
+    return jsonify({"ocr_img": base64.b64encode(img_io.getvalue()).decode('utf-8'), "ocr_text": txts,"ocr_box" : boxes}),200
+
+    
     

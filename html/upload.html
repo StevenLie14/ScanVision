@@ -28,8 +28,6 @@
                         {% if current_user.is_authenticated %}
                             <a href="/docs/list" class="hover:text-purple-400 transition-colors">Documents</a>
                         {% endif %}
-                        <!-- <a href="#contact" class="text-purple-300 hover:text-purple-100 transition-colors duration-300">Contact</a> -->
-                        <!-- <a href="#history" class="text-purple-300 hover:text-purple-100 transition-colors duration-300">History</a> -->
                         
                         <div class="md:ml-4 flex flex-col md:flex-row gap-4">
                             {% if current_user.is_authenticated %}
@@ -51,6 +49,12 @@
     </header>
 
     <main class="pt-20 pb-12 container mx-auto px-4">
+        <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-gray-800 rounded-lg p-6 flex items-center space-x-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                <p class="text-lg">Processing image...</p>
+            </div>
+        </div>
         {% if docs %}
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
                 <div>
@@ -61,17 +65,8 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors">
-                        To Words
-                    </button>
-                    <button class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
-                        <i class="fas fa-share-alt"></i>
-                    </button>
                     <button class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
                         <i class="fas fa-download"></i>
-                    </button>
-                    <button class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
-                        <i class="fas fa-ellipsis-v"></i>
                     </button>
                 </div>
             </div>
@@ -90,6 +85,10 @@
                             <div class="flex justify-between items-center">
                                 <span class="text-sm text-purple-300">Page {{ image.file_number }}</span>
                                 <div class="flex space-x-2">
+                                    <button id="detectText" onclick="detectText('{{ image.id }}')" class="w-full mx-3 bg-purple-600 hover:bg-purple-700 p-3 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-text-width mr-2"></i>
+                                        Detect Text
+                                    </button>
                                     <button onclick="redirectToEditor('{{ image.id }}')" class="p-1.5 hover:bg-purple-900/30 rounded-lg transition-colors">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -139,6 +138,21 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('loading').classList.add('flex');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('loading').classList.remove('flex');
+        }
+
+        const detectText = (imageId) => {
+            showLoading()
+            window.location.href = `/image/ocr/${imageId}`;
+        }
 
         const redirectToEditor = (imageId) => {
             window.location.href = `/image/${imageId}`;

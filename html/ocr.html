@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScanVision</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <header class="bg-gray-800 p-4 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <button onclick="redirectToDocument('{{ image.document_id }}')" class="flex text-purple-400 hover:text-purple-300 items-center">
+                <i class="fas fa-arrow-left text-xl"></i>
+            </button>
+            <h1 class="text-2xl text-center font-bold text-purple-400">Image To Text</h1>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 space-y-6">
+        <div class="relative bg-gray-800 rounded-lg p-4 flex justify-center items-center min-h-[300px] md:min-h-[500px] overflow-hidden">
+            <div class="relative inline-block">
+                <img id="preview" src="data:image/jpeg;base64,{{ ocr_img }}" alt="Preview" class="max-w-full h-auto object-contain" draggable="false">
+            </div>
+        </div>
+
+
+
+        <div class="bg-gray-800 rounded-lg p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Text Detection (OCR)</h2>
+                <button id="copyOcrText" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">
+                    Copy to Clipboard
+                </button>
+            </div>
+            <div id="image-container">
+                <div id="overlay-container"></div>
+            </div>
+            <div id="ocr-text" class="mt-4 bg-gray-700 p-3 rounded-lg">
+                {% for text in ocr_text %}
+                    <p class="text-gray-300 text-sm">{{ text }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+        const redirectToDocument = (docId) => {
+            window.location.href = `/docs/${docId}`
+        }
+
+        function updateOverlayPositions() {
+            const imgContainer = document.querySelector('.relative.inline-block');
+            const img = document.getElementById('preview');
+            const overlay = document.getElementById('ocr-overlay');
+            const boxes = overlay.querySelectorAll('div');
+
+            const scaleX = img.width / img.naturalWidth;
+            const scaleY = img.height / img.naturalHeight;
+
+            overlay.style.width = `${img.width}px`;
+            overlay.style.height = `${img.height}px`;
+
+            boxes.forEach(box => {
+                const x = parseFloat(box.dataset.x) * scaleX;
+                const y = parseFloat(box.dataset.y) * scaleY;
+                const width = parseFloat(box.dataset.width) * scaleX;
+                const height = parseFloat(box.dataset.height) * scaleY;
+
+                box.style.left = `${x}px`;
+                box.style.top = `${y}px`;
+                box.style.width = `${width}px`;
+                box.style.height = `${height}px`;
+            });
+        }
+
+        window.addEventListener('load', updateOverlayPositions);
+        window.addEventListener('resize', updateOverlayPositions);
+
+        document.getElementById('copyOcrText').addEventListener('click', function() {
+            const ocr_text = {{ ocr_text | tojson }};
+            const allText = ocr_text.join('\n');
+
+            navigator.clipboard.writeText(allText).then(() => {
+                toastr.success('Copied to clipboard');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        });
+    </script>
+</body>
+</html>
+

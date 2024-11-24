@@ -78,6 +78,14 @@
     transition: all 0.3s ease;
 }
 
+.filter-preview {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.filter-preview:hover {
+    transform: scale(1.05);
+}
+
 ::-webkit-scrollbar {
     width: 6px; 
     height: 6px; 
