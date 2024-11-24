@@ -58,18 +58,32 @@
         {% if docs %}
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
                 <div>
-                    <h1 class="text-2xl font-bold mb-2">{{ docs.name }}</h1>
+                    <h1 id="doc-name" class="text-2xl font-bold mb-2">{{ docs.name }}</h1>
+                    <input 
+                        id="name-input" 
+                        class="text-2xl text-black font-bold mb-2 hidden border border-purple-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500 " 
+                        value="{{ docs.name }}" 
+                    />
+
                     <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-purple-300">
                         <span>Added: {{ docs.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
                         <span>Pages: {{ docs.images.count() }}</span>
                     </div>
                 </div>
+                
                 <div class="flex flex-wrap gap-3">
+                    <button onclick="toggleEdit()" class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                    </button>
+                    
                     <button onclick="downloadDocs()" id="download" class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
                         <i class="fas fa-download"></i>
                     </button>
                 </div>
             </div>
+
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="image-grid">
                 {% for image in docs.images %}
                     <div class="bg-purple-900/20 rounded-xl overflow-hidden card-hover border border-purple-900/30 flex flex-col">
@@ -113,149 +127,16 @@
         {% endif %}
     </main>
 
-    <script>
-        toastr.options = {
-            "closeButton": true,
-            "debug": false,
-            "newestOnTop": true,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "preventDuplicates": false,
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "timeOut": "5000",
-            "extendedTimeOut": "1000",
-            "showEasing": "swing",
-            "hideEasing": "linear",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        };
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    toastr["{{ category }}"]("{{ message }}");
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        function showLoading() {
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('loading').classList.add('flex');
-        }
-
-        function hideLoading() {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('loading').classList.remove('flex');
-        }
-
-        const detectText = (imageId) => {
-            showLoading()
-            window.location.href = `/image/ocr/${imageId}`;
-        }
-
-        const redirectToEditor = (imageId) => {
-            window.location.href = `/image/${imageId}`;
-        }
-
-        const deleteImage = (imageId) => {
-            fetch(`/image/${imageId}`, {
-                method: 'DELETE',
-            }).then(response => {
-                return response.json();
-            }).then(data => {
-                console.log(data);
-                toastr.success('Image deleted successfully');
-                window.location.reload();
-            }).catch(error => {
-                console.error('Error:', error);
-                toastr.error('Error deleting image');
-            });
-        }
-
-        const handleFiles = (files) => {
-            ([...files]).forEach(uploadFile);
-        }
-
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const imageGrid = document.getElementById('image-grid');
-
-        dropZone.addEventListener('click', () => fileInput.click());
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false);
-        });
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, unhighlight, false);
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const files = e.dataTransfer.files;
-            handleFiles(files);
-        });
-        fileInput.addEventListener('change', (e) => {
-            e.preventDefault();
-            const files = e.target.files;
-            handleFiles(files);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        function highlight() {
-            dropZone.classList.add('drag-over');
-        }
-
-        function unhighlight() {
-            dropZone.classList.remove('drag-over');
-        }
-
-
-        function uploadFile(file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('document_id', '{{ docs.id }}');
-
-            fetch('/docs/add/'+ '{{ docs.id }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                window.location.reload();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                toastr.error('Error uploading image');
-            });
-        }
-        function downloadDocs() {
-            fetch('/docs/download/' + '{{ docs.id }}', {
-                method: 'GET',
-            })
-            .then(response => response.blob()) 
-            .then(blob => { 
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob); 
-                link.download = '{{docs.name}}.pdf'; 
-                link.click();  
-            })
-            .catch(error => {
-                console.log('Error:', error);
-                toastr.error('Error downloading document');
-            });
-        }
-
-    </script>
 </body>
+<script src="{{ url_for('static', filename='js/global.js') }}"></script>
+<script>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                toastr["{{ category }}"]("{{ message }}");
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</script>
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
 </html>

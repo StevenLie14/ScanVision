@@ -16,7 +16,7 @@
             <button onclick="redirectToDocument('{{ image.document_id }}')" class="flex text-purple-400 hover:text-purple-300 items-center">
                 <i class="fas fa-arrow-left text-2xl"></i>
             </button>
-            <h1 class="text-2xl text-center items-center font-bold text-purple-400">Enhanced Image Editor</h1>
+            <h1 class="text-2xl text-center items-center font-bold text-purple-400">ScanVision</h1>
         </div>
         <button id="saveButton" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
             Save Changes
@@ -167,36 +167,20 @@
 
     </main>
 
+    <script src="{{ url_for('static', filename='js/global.js') }}"></script>
+
     <script>
         const redirectToDocument = (docId) => {
             window.location.href = `/docs/${docId}`
         }
-        
-
-        toastr.options = {
-            "closeButton": true,
-            "debug": false,
-            "newestOnTop": true,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "preventDuplicates": false,
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "timeOut": "5000",
-            "extendedTimeOut": "1000",
-            "showEasing": "swing",
-            "hideEasing": "linear",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        };
 
         
-        function showLoading() {
+        const showLoading = () => {
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('loading').classList.add('flex');
         }
 
-        function hideLoading() {
+        const hideLoading = () => {
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('loading').classList.remove('flex');
         }
@@ -236,8 +220,6 @@
         }
 
         resizeDivider()
-        
-
         document.getElementById('rotateLeft').addEventListener('click', () => {
             angle_type += 1
             angle_type %= 4 
@@ -320,7 +302,7 @@
             showLoading();
 
 
-            fetch(`/image/{{ image.id }}?filter=${activeFilter}&angle=${angle_type}&split=${split}&vert=${vertFlip}&hori=${horiFlip}`, {
+            fetch(`/image/{{ image.id }}?filter=${activeFilter}&angle=${angle_type}&split=${split}&vert=${vertFlip?1:0}&hori=${horiFlip?1:0}`, {
                 method: 'POST',
             })
             .then(response => response.json())

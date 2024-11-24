@@ -48,7 +48,7 @@ def download_docs(id):
         flash('Document not found', 'error')
         return jsonify({"message": "Document not found"}), 404 
     
-    pdf = fitz.open()  # Create a new empty PDF document
+    pdf = fitz.open()
     
     for image in docs.images:
         image_path = os.path.join('static', image.path)
@@ -74,6 +74,10 @@ def download_docs(id):
 def upload_file():
     from server.main import app
     from server.app import db
+    
+    if current_user.is_authenticated == False:
+        return jsonify({"error" : "Not Authenticated"}),401
+    
     if 'file' not in request.files:
         flash('No file part', 'error')
         return jsonify({"error": "No file part"}), 400
@@ -122,6 +126,7 @@ def upload_file():
     return jsonify({"error": "Unsupported file type"}), 400
 
 @file_controller.route('/add/<id>', methods=['POST'])
+@login_required
 def add_image(id):
     from server.main import app
     from server.app import db
@@ -178,4 +183,21 @@ def add_image(id):
 
     return jsonify({"error": "Unsupported file type"}), 400
     
+@file_controller.route('/edit/<id>', methods=['POST'])
+@login_required
+def change_docs_name(id):
+    doc = Document.query.filter_by(id=id).first()
+    if not doc:
+        flash('Document not found', 'error')
+        return jsonify({"error": "Document not found"}), 404
+    
+    name = request.json.get('name')
+    if not name or name== "":
+        return jsonify({"error": "Invalid name provided"}), 400
+    
+    doc.name = name
+    doc.updated_at = datetime.now()
+    db.session.add(doc)
+    db.session.commit()
+    return jsonify({"message": "Document name updated successfully", "new_name": doc.name}), 200
     

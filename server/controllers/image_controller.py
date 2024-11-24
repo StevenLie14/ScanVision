@@ -30,7 +30,6 @@ def getFilteredImage(image, filter_type):
     elif filter_type == 'grayscale':
         filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
         filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
-    
     elif filter_type == 'equ': 
         filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
         filtered_img = cv2.equalizeHist(filtered_img)
@@ -55,12 +54,12 @@ def getFilteredImage(image, filter_type):
     
     return filtered_img
 
-def rotate_image(image,angle,horiFlip=0,vertFlip=0):
+def rotate_image(image,angle,hori_flip=0,vert_flip=0):
     angle = int(angle)
     image = np.rot90(image,angle)
-    if horiFlip == 1:
+    if hori_flip == 1:
         image = np.fliplr(image)
-    if vertFlip == 1:
+    if vert_flip == 1:
         image = np.flipud(image)
     
     return image
@@ -82,10 +81,11 @@ def edit(id):
         
         filtered_img = getFilteredImage(cv2.imread(image_path), request.args.get('filter'))
         angle_type = request.args.get('angle',default=0)
-        hori_flip = request.args.get('hori',default=False)
-        vert_flip = request.args.get('vert',default=False)
-        print(angle_type,hori_flip,vert_flip)
-        img = rotate_image(img,angle_type,hori_flip,vert_flip)
+        hori_flip = int(request.args.get('hori',default=0))
+        vert_flip = int(request.args.get('vert',default=0))
+        
+        
+        filtered_img = rotate_image(filtered_img,angle_type,hori_flip,vert_flip)
         
         cv2.imwrite(image_path, filtered_img)
         
@@ -171,11 +171,10 @@ def image_filter(id):
     angle_type = request.args.get('angle',default=0)
     hori_flip = int(request.args.get('hori',default=0))
     vert_flip = int(request.args.get('vert',default=0))
-    print(angle_type,hori_flip,vert_flip)
     
     img = rotate_image(img,angle_type,hori_flip,vert_flip)
     
-    filtered_img = rotate_image(filtered_img,angle_type)
+    filtered_img = rotate_image(filtered_img,angle_type,hori_flip,vert_flip)
     split_index = int(img.shape[1] * (1 - split_ratio / 100))
 
     combined_img = np.concatenate(
@@ -265,7 +264,6 @@ def ocr(id):
     img_io = io.BytesIO(buffer)
 
     return render_template('ocr.html', ocr_img=base64.b64encode(img_io.getvalue()).decode('utf-8'), ocr_text=txts, ocr_box=boxes,image=image)
-    return jsonify({"ocr_img": base64.b64encode(img_io.getvalue()).decode('utf-8'), "ocr_text": txts,"ocr_box" : boxes}),200
 
     
     
