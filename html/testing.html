@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Lens-like OCR</title>
+    <script>
+        async function fetchOCR(id) {
+            const response = await fetch(`/image/ocr/img/${id}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                const imageContainer = document.getElementById('image-container');
+                const overlayContainer = document.getElementById('overlay-container');
+
+                // Clear existing content (but avoid re-appending overlayContainer if it's already there)
+                imageContainer.innerHTML = "";
+
+                // Render image
+                const img = new Image();
+                img.src = `data:image/jpeg;base64,${data.ocr_img}`;
+                img.id = "ocr-image";
+                img.style.position = "relative";
+                img.onload = () => {
+                    overlayContainer.style.width = `${img.width}px`;
+                    overlayContainer.style.height = `${img.height}px`;
+                };
+
+                // Ensure overlayContainer is not appended twice
+                if (!imageContainer.contains(overlayContainer)) {
+                    imageContainer.appendChild(overlayContainer);
+                }
+                
+                imageContainer.appendChild(img);
+
+                // Render bounding boxes with selectable text
+                data.ocr_box.forEach((box, index) => {
+                    const [x1, y1, x2, y2] = box;
+                    const width = x2 - x1;
+                    const height = y2 - y1;
+
+                    const boundingBox = document.createElement('div');
+                    boundingBox.className = "bounding-box";
+                    boundingBox.style.left = `${x1}px`;
+                    boundingBox.style.top = `${y1}px`;
+                    boundingBox.style.width = `${width}px`;
+                    boundingBox.style.height = `${height}px`;
+                    boundingBox.style.position = "absolute";
+                    boundingBox.style.border = "2px solid red";  // Example: Add a red border for visibility
+
+                    // Create a span for the detected text
+                    const textSpan = document.createElement('span');
+                    textSpan.className = "ocr-text";
+                    textSpan.style.position = "absolute";
+                    textSpan.style.left = "0";
+                    textSpan.style.top = "0";
+                    textSpan.style.width = "100%";
+                    textSpan.style.height = "100%";
+                    textSpan.style.userSelect = "text";  // Make the text selectable
+                    textSpan.textContent = data.ocr_text[index];
+
+                    // Append the text span inside the bounding box
+                    if (!boundingBox.contains(textSpan))
+                        boundingBox.appendChild(textSpan);
+
+                    // Add click event for selection and copying (optional)
+                    textSpan.addEventListener('click', (event) => {
+                        const selectedText = event.target.textContent;
+                        navigator.clipboard.writeText(selectedText).then(() => {
+                            alert(`Copied: ${selectedText}`);
+                        });
+                    });
+
+                    // Append the bounding box to the overlay container
+                    overlayContainer.appendChild(boundingBox);
+                });
+            } else {
+                alert(data.message || "Error fetching OCR data");
+            }
+        }
+
+    </script>
+    <style>
+        #image-container {
+            position: relative;
+        }
+        #overlay-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none; /* Prevent interference with the image */
+        }
+        .bounding-box {
+            position: absolute;
+            border: 2px solid red;  /* Adjust border style */
+            background-color: rgba(255, 0, 0, 0.3);  /* Add background color for better visibility */
+            pointer-events: none;  /* Prevent the bounding box from interfering with text selection */
+        }
+
+        .ocr-text {
+            font-size: 14px;  /* Adjust text size */
+            color: white;  /* Text color */
+            user-select: text;  /* Make the text selectable */
+            pointer-events: auto;  /* Enable text selection */
+        }
+    </style>
+</head>
+<body>
+    <div id="image-container">
+        <div id="overlay-container"></div>
+    </div>
+
+    
+</body>
+<script>
+        // Replace with your image ID
+        fetchOCR("{{id}}");
+    </script>
+</html>

@@ -65,7 +65,7 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
+                    <button onclick="downloadDocs()" id="download" class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
                         <i class="fas fa-download"></i>
                     </button>
                 </div>
@@ -239,6 +239,23 @@
                 toastr.error('Error uploading image');
             });
         }
+        function downloadDocs() {
+            fetch('/docs/download/' + '{{ docs.id }}', {
+                method: 'GET',
+            })
+            .then(response => response.blob()) 
+            .then(blob => { 
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob); 
+                link.download = '{{docs.name}}.pdf'; 
+                link.click();  
+            })
+            .catch(error => {
+                console.log('Error:', error);
+                toastr.error('Error downloading document');
+            });
+        }
+
     </script>
 </body>
 </html>

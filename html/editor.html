@@ -32,8 +32,40 @@
         </div>
 
         <div class="relative bg-gray-800 rounded-lg p-4 flex justify-center items-center min-h-[300px] md:min-h-[500px]">
-            <img id="preview" src="{{ url_for('static', filename=image.path) }}?filter=filter" alt="Preview" class="max-w-full object-contain">
+            <div class="relative w-full min-h-[300px] md:min-h-[500px] h-full flex items-center justify-center" id="image-container">
+                <img
+                    id="preview"
+                    src="{{ url_for('image_controller.image_filter', id=image.id) }}?filter=original&split=0"
+                    alt="Image preview with adjustable split"
+                    class="max-w-full min-h-[300px] md:min-h-[500px]  h-auto object-contain"
+                >
+                <div id="resizable-container" class="absolute">
+                    <div 
+                        id="resizable-divider"
+                        class="absolute inset-y-0 bg-black shadow-lg cursor-ew-resize group"
+                        style="width: 2px; left: 0%;"
+                    >
+                        <div 
+                            class="absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center cursor-ew-resize group-hover:scale-110 transition-transform"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8m-8 5h8" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <input 
+                type="range" 
+                id="slider" 
+                name="split" 
+                min="0" 
+                max="100" 
+                value="0" 
+                class="hidden"
+            >
         </div>
+
 
         <div class="relative">
             <button id="scrollLeft" class="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-75 p-2 rounded-r-lg z-10 hover:bg-opacity-100">
@@ -53,35 +85,20 @@
                             </div>
                         </div>
                     </div>
+                    <div class="filter-preview flex-none" data-filter="grayscale">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img id="grayscale" src="/placeholder.svg" alt="grayscale" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+           
+                     GrayScale
+                            </div>
+                        </div>
+                    </div>
                     <div class="filter-preview flex-none" data-filter="enhance">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
                             <img id="enhance" src="/placeholder.svg" alt="Enhance" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Enhance
-                            </div>
-                        </div>
-                    </div>
-                    <div class="filter-preview flex-none" data-filter="magic">
-                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="magic" src="/placeholder.svg" alt="Magic Pro" class="w-full h-full object-cover">
-                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
-                                Magic Pro
-                            </div>
-                        </div>
-                    </div>
-                    <div class="filter-preview flex-none" data-filter="brighten">
-                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="brighten" src="/placeholder.svg" alt="Brighten" class="w-full h-full object-cover">
-                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
-                                Brighten
-                            </div>
-                        </div>
-                    </div>
-                    <div class="filter-preview flex-none" data-filter="noshadow">
-                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="noshadow" src="/placeholder.svg" alt="No Shadow" class="w-full h-full object-cover">
-                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
-                                No Shadow
                             </div>
                         </div>
                     </div>
@@ -93,11 +110,27 @@
                             </div>
                         </div>
                     </div>
-                    <div class="filter-preview flex-none" data-filter="economy">
+                    <div class="filter-preview flex-none" data-filter="invert">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="economy" src="/placeholder.svg" alt="Economy" class="w-full h-full object-cover">
+                            <img id="invert" src="/placeholder.svg" alt="B&W" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
-                                Economy
+                                Invert
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-preview flex-none" data-filter="equ">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img id="equ" src="/placeholder.svg" alt="equ" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+                                Equalize Histogram
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-preview flex-none" data-filter="manequ">
+                        <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
+                            <img id="manequ" src="/placeholder.svg" alt="equ" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
+                                Manual Equalize Histogram
                             </div>
                         </div>
                     </div>
@@ -107,7 +140,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 ">
             <div class="bg-gray-800 rounded-lg p-4 space-y-4">
-                <h2 class="text-xl font-semibold mb-4">Histogram</h2>
+                <!-- <h2 class="text-xl font-semibold mb-4">Histogram</h2> -->
                 <div class="space-y-2">
                     <img id="histogram" src="{{ url_for('image_controller.histogram', id = image.id)}}" alt="" class="w-full h-full max-h-[300px] object-contain">
                 </div>
@@ -135,6 +168,11 @@
     </main>
 
     <script>
+        const redirectToDocument = (docId) => {
+            window.location.href = `/docs/${docId}`
+        }
+        
+
         toastr.options = {
             "closeButton": true,
             "debug": false,
@@ -152,9 +190,7 @@
             "hideMethod": "fadeOut"
         };
 
-        const redirectToDocument = (docId) => {
-            window.location.href = `/docs/${docId}`
-        }
+        
         function showLoading() {
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('loading').classList.add('flex');
@@ -169,19 +205,99 @@
         document.getElementById('scrollLeft').addEventListener('click', () => {
             filterContainer.scrollBy({ left: -200, behavior: 'smooth' });
         });
+
         document.getElementById('scrollRight').addEventListener('click', () => {
             filterContainer.scrollBy({ left: 200, behavior: 'smooth' });
         });
-
         const preview = document.getElementById('preview');
+        const slider = document.getElementById('slider');
         let activeFilter = 'original';
+        const divider = document.getElementById("resizable-divider");
+        const dividerContainer = document.getElementById("resizable-container");
+        const container = divider.parentElement;
+        let angle_type =0;
+        let split = 0;
+        let vertFlip = false;
+        let horiFlip = false;
+
+
+
+        const resizeDivider = () => {
+            console.log(activeFilter, split, angle_type, vertFlip, horiFlip)
+            preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${split}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}`
+            preview.onload = () => {
+                dividerContainer.style.height = `${preview.offsetHeight}px`;
+                dividerContainer.style.width = `${preview.offsetWidth}px`;
+            }
+        }
+
+        window.onresize = () => {
+            resizeDivider();
+        }
+
+        resizeDivider()
+        
+
+        document.getElementById('rotateLeft').addEventListener('click', () => {
+            angle_type += 1
+            angle_type %= 4 
+            resizeDivider();
+        })
+
+        document.getElementById('rotateRight').addEventListener('click', () => {
+            angle_type -= 1
+            angle_type %= 4 
+            resizeDivider();
+        })
+
+        document.getElementById('flipHorizontal').addEventListener('click', () => {
+            horiFlip = !horiFlip
+            resizeDivider();
+        })
+
+        document.getElementById('flipVertical').addEventListener('click', () => {
+            vertFlip = !vertFlip
+            resizeDivider();
+        })
+
+        let isDragging = false;
+
+        divider.addEventListener("mousedown", () => {
+            isDragging = true;
+            document.body.style.cursor = "ew-resize";
+        });
+
+        document.addEventListener("mouseup", () => {
+            if (isDragging) {
+                isDragging = false;
+                document.body.style.cursor = "default";
+            }
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (isDragging) {
+                const rect = dividerContainer.getBoundingClientRect();
+                const offsetX = e.clientX - rect.left;
+                const percentage = Math.round(Math.min(100, Math.max(0, (offsetX / rect.width) * 100)),0); 
+                slider.value = percentage; 
+                divider.style.left = `${percentage}%`; 
+                split = 100 - percentage
+                resizeDivider();
+            }
+        });
+        
         document.querySelectorAll('.filter-preview').forEach(filterPreview => {
             const filter = filterPreview.dataset.filter;
-            document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}`;
+            document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}&split=100&angle=0&vert=0&hori=0`;
             filterPreview.addEventListener('click', () => {
                 showLoading();
                 activeFilter = filter;
-                preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}`;
+                slider.value= 0
+                divider.style.left = `${0}%`;
+                preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${100}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}`
+
+
+                
                 const histogram = document.getElementById('histogram');
                 histogram.src = `{{ url_for('image_controller.histogram', id = image.id) }}?filter=${filter}`;
                 let imagesLoaded = 0;
@@ -204,7 +320,7 @@
             showLoading();
 
 
-            fetch(`/image/{{ image.id }}?filter=${activeFilter}`, {
+            fetch(`/image/{{ image.id }}?filter=${activeFilter}&angle=${angle_type}&split=${split}&vert=${vertFlip}&hori=${horiFlip}`, {
                 method: 'POST',
             })
             .then(response => response.json())
@@ -219,6 +335,10 @@
             });
             
         });
+
+        
+
+        
     </script>
 </body>
 </html>

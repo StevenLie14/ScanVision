@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash,jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash,jsonify, send_file
 from flask_login import login_user, logout_user, login_required,current_user
 from datetime import datetime
 from server.models.document import Document
@@ -8,7 +8,7 @@ from server.app import db
 import fitz
 import uuid
 import os
-
+import io
 
 file_controller = Blueprint('file_controller', __name__)
 folder_path = os.getenv('IMAGE_FOLDER')
@@ -39,6 +39,35 @@ def file(id):
 def docs_list():
     docs_list = Document.query.filter_by(user_id=current_user.id).order_by(Document.updated_at.desc()).all()
     return render_template('document.html', docs_list=docs_list)
+
+@file_controller.route('/download/<id>', methods=['GET'])
+@login_required
+def download_docs(id):
+    docs = Document.query.filter_by(id=id).first()
+    if not docs:
+        flash('Document not found', 'error')
+        return jsonify({"message": "Document not found"}), 404 
+    
+    pdf = fitz.open()  # Create a new empty PDF document
+    
+    for image in docs.images:
+        image_path = os.path.join('static', image.path)
+        img = fitz.open(image_path)
+        if img is None:
+            print('nt')
+        print(img)
+        pdf.insert_file(img)
+        
+    pdf_bytes = io.BytesIO()
+    pdf.save(pdf_bytes)
+    pdf_bytes.seek(0)
+    
+    return send_file(pdf_bytes, as_attachment=True, download_name=docs.name, mimetype='application/pdf')
+
+        
+        
+
+    
 
 
 @file_controller.route('/upload', methods=['POST'])

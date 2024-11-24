@@ -24,18 +24,47 @@ folder_path = os.getenv('IMAGE_FOLDER')
 
 def getFilteredImage(image, filter_type):
     filtered_img = image
+    
     if filter_type == 'enhance':
-        filtered_img = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-        filtered_img[:, :, 0] = cv2.equalizeHist(filtered_img[:, :, 0])
-        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_LAB2BGR)
+        filtered_img = cv2.convertScaleAbs(filtered_img, alpha=1.1, beta=10)
     elif filter_type == 'grayscale':
-        filtered_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
         filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
+    
+    elif filter_type == 'equ': 
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
+        filtered_img = cv2.equalizeHist(filtered_img)
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
+    elif filter_type == 'manequ':  
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
+        hist, _ = np.histogram(filtered_img.flatten(), 256, [0, 256])
+        cdf = hist.cumsum()
+        cdf = ( (cdf - cdf.min()) * 255 ) / (cdf.max() - cdf.min())
+        cdf = np.uint8(cdf)
+        filtered_img= cdf[filtered_img.flatten()]
+        filtered_img = cv2.cvtColor(filtered_img,cv2.COLOR_GRAY2BGR)
+        filtered_img = np.reshape(filtered_img,image.shape)
+    elif filter_type == 'bw': 
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2GRAY)
+        _, filtered_img = cv2.threshold(filtered_img, 127, 255, cv2.THRESH_BINARY)
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
+    elif filter_type == 'invert': 
+        filtered_img = cv2.bitwise_not(filtered_img)
     elif filter_type == 'original':
         filtered_img = image
+    
     return filtered_img
+
+def rotate_image(image,angle,horiFlip=0,vertFlip=0):
+    angle = int(angle)
+    image = np.rot90(image,angle)
+    if horiFlip == 1:
+        image = np.fliplr(image)
+    if vertFlip == 1:
+        image = np.flipud(image)
     
-    
+    return image
+        
 @image_controller.route('/<id>', methods=['GET', 'DELETE','POST'])
 @login_required
 def edit(id):
@@ -52,7 +81,11 @@ def edit(id):
         
         
         filtered_img = getFilteredImage(cv2.imread(image_path), request.args.get('filter'))
-        
+        angle_type = request.args.get('angle',default=0)
+        hori_flip = request.args.get('hori',default=False)
+        vert_flip = request.args.get('vert',default=False)
+        print(angle_type,hori_flip,vert_flip)
+        img = rotate_image(img,angle_type,hori_flip,vert_flip)
         
         cv2.imwrite(image_path, filtered_img)
         
@@ -123,7 +156,35 @@ def image_filter(id):
     filter_type = request.args.get('filter')
     filtered_img = getFilteredImage(img, filter_type)
     
-    _, buffer = cv2.imencode('.jpg', filtered_img)
+    split_ratio = request.args.get('split', default=0) 
+    try:
+        split_ratio = float(split_ratio)
+    except ValueError:
+        split_ratio = 0 
+        
+    
+
+    split_ratio = max(0, min(split_ratio, 100))
+
+    
+    
+    angle_type = request.args.get('angle',default=0)
+    hori_flip = int(request.args.get('hori',default=0))
+    vert_flip = int(request.args.get('vert',default=0))
+    print(angle_type,hori_flip,vert_flip)
+    
+    img = rotate_image(img,angle_type,hori_flip,vert_flip)
+    
+    filtered_img = rotate_image(filtered_img,angle_type)
+    split_index = int(img.shape[1] * (1 - split_ratio / 100))
+
+    combined_img = np.concatenate(
+        (img[:, :split_index], filtered_img[:, split_index:]), 
+        axis=1
+    )
+    
+    
+    _, buffer = cv2.imencode('.jpg', combined_img)
     img_io = io.BytesIO(buffer)
     
     return send_file(img_io, mimetype='image/jpeg')
@@ -159,6 +220,7 @@ def histogram(id):
     plt.plot(gray_counter)
     plt.ylabel('quantity')
     plt.xlabel('intensity')
+    plt.title('Histogram')
     plt.axis([0, 256, 0, gray_counter.max()])
 
     img_buffer = BytesIO()
