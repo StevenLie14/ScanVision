@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash,jsonify, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, flash,jsonify, send_file,send_from_directory
 from flask_login import login_required
 from datetime import datetime
 from server.models.document import Document
@@ -63,6 +63,13 @@ def rotate_image(image,angle,hori_flip=0,vert_flip=0):
         image = np.flipud(image)
     
     return image
+
+def preprocess(img,x,y,w,h,width,height):
+    if width is not None and height is not None:
+        img = cv2.resize(img, (int(width), int(height)))
+    if x is not None and y is not None and w is not None and h is not None:
+        img = img[int(y):int(y+h), int(x):int(x+w)]
+    return img
         
 @image_controller.route('/<id>', methods=['GET', 'DELETE','POST'])
 @login_required
@@ -78,8 +85,37 @@ def edit(id):
         if not os.path.exists(image_path):
             return jsonify({"message": "Image not found"}), 404
         
+        img =cv2.imread(image_path)
+        width = int(request.args.get('width')) if request.args.get('width') else None
+        height = int(request.args.get('height')) if request.args.get('height') else None 
         
-        filtered_img = getFilteredImage(cv2.imread(image_path), request.args.get('filter'))
+        x = float(request.args.get('x'))*img.shape[1] if request.args.get('x') else None
+        y = float(request.args.get('y'))*img.shape[0] if request.args.get('y') else None
+        w = float(request.args.get('w'))*img.shape[1] if request.args.get('w') else None
+        h = float(request.args.get('h'))*img.shape[0] if request.args.get('h') else None
+        
+        img = preprocess(img,x,y,w,h,width,height)
+            
+        filter_type = request.args.get('filter')
+        filtered_img = getFilteredImage(img, filter_type)
+        
+        split_ratio = request.args.get('split', default=0) 
+        try:
+            split_ratio = float(split_ratio)
+        except ValueError:
+            split_ratio = 0 
+
+        split_ratio = max(0, min(split_ratio, 100))
+        
+        angle_type = request.args.get('angle',default=0)
+        hori_flip = int(request.args.get('hori',default=0))
+        vert_flip = int(request.args.get('vert',default=0))
+        img = rotate_image(img,angle_type,hori_flip,vert_flip)
+        
+        filtered_img = rotate_image(filtered_img,angle_type,hori_flip,vert_flip)
+        
+        
+        filtered_img = getFilteredImage(img, request.args.get('filter'))
         angle_type = request.args.get('angle',default=0)
         hori_flip = int(request.args.get('hori',default=0))
         vert_flip = int(request.args.get('vert',default=0))
@@ -153,14 +189,15 @@ def image_filter(id):
     if img is None:
         return jsonify({"message": "Image not found"}), 404
     
+    width = int(request.args.get('width')) if request.args.get('width') else None
+    height = int(request.args.get('height')) if request.args.get('height') else None 
+    
     x = float(request.args.get('x'))*img.shape[1] if request.args.get('x') else None
     y = float(request.args.get('y'))*img.shape[0] if request.args.get('y') else None
     w = float(request.args.get('w'))*img.shape[1] if request.args.get('w') else None
     h = float(request.args.get('h'))*img.shape[0] if request.args.get('h') else None
     
-    if x is not None and y is not None and w is not None and h is not None:
-        img = img[int(y):int(y+h), int(x):int(x+w)]
-        
+    img = preprocess(img,x,y,w,h,width,height)
         
     filter_type = request.args.get('filter')
     filtered_img = getFilteredImage(img, filter_type)
@@ -170,18 +207,12 @@ def image_filter(id):
         split_ratio = float(split_ratio)
     except ValueError:
         split_ratio = 0 
-        
-    
-        
-    
 
     split_ratio = max(0, min(split_ratio, 100))
     
     angle_type = request.args.get('angle',default=0)
     hori_flip = int(request.args.get('hori',default=0))
     vert_flip = int(request.args.get('vert',default=0))
-    
-    
     img = rotate_image(img,angle_type,hori_flip,vert_flip)
     
     filtered_img = rotate_image(filtered_img,angle_type,hori_flip,vert_flip)
@@ -274,6 +305,33 @@ def ocr(id):
     img_io = io.BytesIO(buffer)
 
     return render_template('ocr.html', ocr_img=base64.b64encode(img_io.getvalue()).decode('utf-8'), ocr_text=txts, ocr_box=boxes,image=image)
+
+@image_controller.route('download/<id>', methods=['GET'])
+@login_required
+def download_img(id):
+    image = Image.query.filter_by(id=id).first()
+    if not image:
+        return jsonify({"message": "Image not found"}), 404
+
+    image_path = os.path.join('static', image.path)
+    
+    
+    if not os.path.exists(image_path):
+        return jsonify({"message": "Image file not found on server"}), 404
+
+    img = cv2.imread(image_path)
+    _, img_encoded = cv2.imencode('.jpg', img)
+    img_bytes = img_encoded.tobytes()
+
+    return send_file(
+        io.BytesIO(img_bytes),
+        mimetype='image/jpeg',
+        as_attachment=True,
+        download_name=f'{id}.jpg'
+    )
+    
+    
+    
 
 
     

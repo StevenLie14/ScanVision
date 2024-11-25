@@ -109,6 +109,9 @@
                                     <button onclick="deleteImage('{{ image.id }}')" class="p-1.5 hover:bg-purple-900/30 rounded-lg transition-colors">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    <button onclick="downloadImage('{{ image.id }}','{{ image.file_number }}')" id="download-image" class="p-2 hover:bg-purple-900/30 rounded-lg transition-colors">
+                                        <i class="fas fa-download"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -173,6 +176,23 @@
         .catch(error => {
             console.log('Error:', error);
             toastr.error('Error downloading document');
+        });
+    }
+
+    const downloadImage = (imageId,file_number) => {
+        fetch('/image/download/' + imageId, {
+            method: 'GET',
+        })
+        .then(response => response.blob()) 
+        .then(blob => { 
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob); 
+            link.download = `{{docs.name}}(${file_number}).png`; 
+            link.click();  
+        })
+        .catch(error => {
+            console.log('Error:', error);
+            toastr.error('Error downloading image');
         });
     }
 

@@ -52,9 +52,21 @@
             </button>
             <h1 class="text-2xl text-center items-center font-bold text-purple-400">ScanVision</h1>
         </div>
-        <button id="saveButton" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
-            Save Changes
-        </button>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <label for="image-width" class="text-sm text-purple-400">Width:</label>
+                <input type="number" id="image-width" class="bg-gray-700 text-white px-2 py-1 rounded w-20" placeholder="Width">
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="imageHeight" class="text-sm text-purple-400">Height:</label>
+                <input type="number" id="image-height" class="bg-gray-700 text-white px-2 py-1 rounded w-20" placeholder="Height">
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="saveButton" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">
+                Save Changes
+            </button>
+        </div>
     </header>
 
     <main class="container mx-auto p-4 space-y-6">
@@ -71,7 +83,7 @@
                     id="preview"
                     src="{{ url_for('image_controller.image_filter', id=image.id) }}?filter=original&split=0"
                     alt="Image preview with adjustable split"
-                    class="max-w-full min-h-[300px] md:min-h-[500px]  h-auto object-contain"
+                    class="max-w-full h-auto object-contain"
                 >
                 <div id="resizable-container" class="absolute">
                     <div 
@@ -251,12 +263,14 @@
         let horiFlip = false;
         let x = 0;
         let y = 0;
-        let w = preview.offsetWidth;
-        let h = preview.offsetHeight;
+        let xw = preview.offsetWidth;
+        let width = preview.offsetWidth;
+        let yh = preview.offsetHeight;
+        let height = preview.offsetHeight;
 
         const resizeDivider = () => {
             console.log(activeFilter, split, angle_type, vertFlip, horiFlip)
-            preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${split}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}&x=${x}&y=${y}&w=${w}&h=${h}`
+            preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${split}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}&x=${x}&y=${y}&w=${xw}&h=${yh}&width=${width}&height=${height}`
             preview.onload = () => {
                 dividerContainer.style.height = `${preview.offsetHeight}px`;
                 dividerContainer.style.width = `${preview.offsetWidth}px`;
@@ -318,18 +332,18 @@
         
         document.querySelectorAll('.filter-preview').forEach(filterPreview => {
             const filter = filterPreview.dataset.filter;
-            document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}&split=100&angle=0&vert=0&hori=0&x=${x}&y=${y}&w=${w}&h=${h}`;
+            document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}&split=100&angle=0&vert=0&hori=0&x=${x}&y=${y}&w=${xw}&h=${yh}&width=${width}&height=${height}`;
             filterPreview.addEventListener('click', () => {
                 showLoading();
                 activeFilter = filter;
                 slider.value= 0
                 divider.style.left = `${0}%`;
-                preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${100}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}&x=${x}&y=${y}&w=${w}&h=${h}`
-
+                preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${100}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}&x=${x}&y=${y}&w=${xw}&h=${yh}&width=${width}&height=${height}`
+                
 
                 
                 const histogram = document.getElementById('histogram');
-                histogram.src = `{{ url_for('image_controller.histogram', id = image.id) }}?filter=${filter}`;
+                histogram.src = `{{ url_for('image_controller.histogram', id = image.id) }}?filter=${filter}&x=${x}&y=${y}&w=${xw}&h=${yh}&width=${width}&height=${height}`;
                 let imagesLoaded = 0;
 
                 const handleLoad = () => {
@@ -350,7 +364,7 @@
             showLoading();
 
 
-            fetch(`/image/{{ image.id }}?filter=${activeFilter}&angle=${angle_type}&split=${split}&vert=${vertFlip?1:0}&hori=${horiFlip?1:0}&x=${x}&y=${y}&w=${w}&h=${h}`, {
+            fetch(`/image/{{ image.id }}?filter=${activeFilter}&angle=${angle_type}&split=${split}&vert=${vertFlip?1:0}&hori=${horiFlip?1:0}&x=${x}&y=${y}&w=${xw}&h=${yh}&width=${width}&height=${height}`, {
                 method: 'POST',
             })
             .then(response => response.json())
@@ -368,6 +382,39 @@
         
     </script>
     <script>
+        const inputWidth = document.getElementById('image-width');
+        const inputHeight = document.getElementById('image-height');
+        inputWidth.value = width;
+        inputHeight.value = height;
+
+        inputWidth.addEventListener('input', () => {
+            if (inputWidth.value == "") {
+                toastr.error('Please enter a value');
+                return
+            }
+            if (parseInt(inputWidth.value) <= 0) {
+                toastr.error('Width must be greater than 0');
+                return
+            }
+            width = inputWidth.value;
+            w = inputWidth.value
+            resizeDivider();
+        });
+
+        inputHeight.addEventListener('input', () => {
+            if (inputHeight.value == "") {
+                toastr.error('Please enter a value');
+                return
+            }
+            if (parseInt(inputHeight.value) <= 0) {
+                toastr.error('Height must be greater than 0');
+                return
+            }
+            height = inputHeight.value;
+            h = inputHeight.value
+            resizeDivider();
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             const cropBox = document.getElementById('crop-box');
             const toggleCropBtn = document.getElementById('toggleCrop');
@@ -480,12 +527,12 @@
                 const cropRect = cropBox.getBoundingClientRect();
                 x = (cropRect.left - imgRect.left) / imgRect.width
                 y = (cropRect.top - imgRect.top) / imgRect.height
-                w = cropRect.width / imgRect.width
-                h = cropRect.height / imgRect.height
+                xw = cropRect.width / imgRect.width
+                yh = cropRect.height / imgRect.height
                 resizeDivider();
                 document.querySelectorAll('.filter-preview').forEach(filterPreview => {
                     const filter = filterPreview.dataset.filter;
-                    document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}&split=100&angle=0&vert=0&hori=0&x=${x}&y=${y}&w=${w}&h=${h}`;
+                    document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}&split=100&angle=0&vert=0&hori=0&x=${x}&y=${y}&w=${xw}&h=${yh}&width=${width}&height=${height}`;
                 })
                 isCropping = !isCropping;
                 cropBox.style.display = isCropping ? 'block' : 'none';
