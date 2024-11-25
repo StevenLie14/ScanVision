@@ -9,6 +9,40 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <style>
+        .crop-box {
+            position: absolute;
+            border: 2px solid white;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        }
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border: 1px solid #333;
+        }
+        .resize-handle-nw {
+            top: -5px;
+            left: -5px;
+            cursor: nw-resize;
+        }
+        .resize-handle-ne {
+            top: -5px;
+            right: -5px;
+            cursor: ne-resize;
+        }
+        .resize-handle-sw {
+            bottom: -5px;
+            left: -5px;
+            cursor: sw-resize;
+        }
+        .resize-handle-se {
+            bottom: -5px;
+            right: -5px;
+            cursor: se-resize;
+        }
+    </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
     <header class="bg-gray-800 p-4 flex justify-between items-center">
@@ -52,6 +86,12 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8m-8 5h8" />
                             </svg>
                         </div>
+                    </div>
+                    <div id="crop-box" class="crop-box hidden">
+                        <div class="resize-handle resize-handle-nw"></div>
+                        <div class="resize-handle resize-handle-ne"></div>
+                        <div class="resize-handle resize-handle-sw"></div>
+                        <div class="resize-handle resize-handle-se"></div>
                     </div>
                 </div>
             </div>
@@ -149,6 +189,12 @@
             <div class="bg-gray-800 rounded-lg p-4 space-y-4">
                 <h2 class="text-xl font-semibold mb-4">Transform</h2>
                 <div class="grid grid-cols-1 gap-4">
+                    <button id="toggleCrop" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+                        <i class="fas fa-crop mr-2"></i>Toggle Crop
+                    </button>
+                    <button id="applyCrop" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg hidden">
+                        <i class="fas fa-check mr-2"></i>Apply Crop
+                    </button>
                     <button id="rotateLeft" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
                         <i class="fas fa-undo mr-2"></i>Rotate Left
                     </button>
@@ -161,6 +207,7 @@
                     <button id="flipVertical" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
                         <i class="fas fa-arrows-alt-v mr-2"></i>Flip Vertical
                     </button>
+                    
                 </div>
             </div>
         </div>
@@ -168,7 +215,6 @@
     </main>
 
     <script src="{{ url_for('static', filename='js/global.js') }}"></script>
-
     <script>
         const redirectToDocument = (docId) => {
             window.location.href = `/docs/${docId}`
@@ -203,12 +249,14 @@
         let split = 0;
         let vertFlip = false;
         let horiFlip = false;
-
-
+        let x = 0;
+        let y = 0;
+        let w = preview.offsetWidth;
+        let h = preview.offsetHeight;
 
         const resizeDivider = () => {
             console.log(activeFilter, split, angle_type, vertFlip, horiFlip)
-            preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${split}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}`
+            preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${split}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}&x=${x}&y=${y}&w=${w}&h=${h}`
             preview.onload = () => {
                 dividerContainer.style.height = `${preview.offsetHeight}px`;
                 dividerContainer.style.width = `${preview.offsetWidth}px`;
@@ -270,13 +318,13 @@
         
         document.querySelectorAll('.filter-preview').forEach(filterPreview => {
             const filter = filterPreview.dataset.filter;
-            document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}&split=100&angle=0&vert=0&hori=0`;
+            document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}&split=100&angle=0&vert=0&hori=0&x=${x}&y=${y}&w=${w}&h=${h}`;
             filterPreview.addEventListener('click', () => {
                 showLoading();
                 activeFilter = filter;
                 slider.value= 0
                 divider.style.left = `${0}%`;
-                preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${100}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}`
+                preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${100}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}&x=${x}&y=${y}&w=${w}&h=${h}`
 
 
                 
@@ -302,7 +350,7 @@
             showLoading();
 
 
-            fetch(`/image/{{ image.id }}?filter=${activeFilter}&angle=${angle_type}&split=${split}&vert=${vertFlip?1:0}&hori=${horiFlip?1:0}`, {
+            fetch(`/image/{{ image.id }}?filter=${activeFilter}&angle=${angle_type}&split=${split}&vert=${vertFlip?1:0}&hori=${horiFlip?1:0}&x=${x}&y=${y}&w=${w}&h=${h}`, {
                 method: 'POST',
             })
             .then(response => response.json())
@@ -317,10 +365,134 @@
             });
             
         });
-
         
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cropBox = document.getElementById('crop-box');
+            const toggleCropBtn = document.getElementById('toggleCrop');
+            const applyCropBtn = document.getElementById('applyCrop');
+            const preview = document.getElementById('preview');
+            let isCropping = false;
 
-        
+            toggleCropBtn.addEventListener('click', () => {
+                isCropping = !isCropping;
+                cropBox.style.display = isCropping ? 'block' : 'none';
+                applyCropBtn.style.display = isCropping ? 'block' : 'none';
+                toggleCropBtn.style.display = !isCropping ? 'block' : 'none';
+                if (isCropping) {
+                    initCropBox();
+                }
+            });
+
+            function initCropBox() {
+                const rect = preview.getBoundingClientRect();
+                cropBox.style.left = '0%';
+                cropBox.style.top = '0%';
+                cropBox.style.width = '100%';
+                cropBox.style.height = '100%';
+            }
+
+            const resizeHandles = cropBox.querySelectorAll('.resize-handle');
+            let isResizing = false;
+            let currentHandle = null;
+
+            resizeHandles.forEach(handle => {
+                handle.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    currentHandle = e.target;
+                    e.preventDefault();
+                });
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const rect = cropBox.getBoundingClientRect();
+                const containerRect = preview.getBoundingClientRect();
+
+                let newLeft = rect.left;
+                let newTop = rect.top;
+                let newWidth = rect.width;
+                let newHeight = rect.height;
+
+                if (currentHandle.classList.contains('resize-handle-se')) {
+                    newWidth = e.clientX - rect.left;
+                    newHeight = e.clientY - rect.top;
+                } else if (currentHandle.classList.contains('resize-handle-sw')) {
+                    newWidth = rect.right - e.clientX;
+                    newHeight = e.clientY - rect.top;
+                    newLeft = e.clientX;
+                } else if (currentHandle.classList.contains('resize-handle-ne')) {
+                    newWidth = e.clientX - rect.left;
+                    newHeight = rect.bottom - e.clientY;
+                    newTop = e.clientY;
+                } else if (currentHandle.classList.contains('resize-handle-nw')) {
+                    newWidth = rect.right - e.clientX;
+                    newHeight = rect.bottom - e.clientY;
+                    newLeft = e.clientX;
+                    newTop = e.clientY;
+                }
+
+                newLeft = Math.max(containerRect.left, Math.min(newLeft, containerRect.right - newWidth));
+                newTop = Math.max(containerRect.top, Math.min(newTop, containerRect.bottom - newHeight));
+                newWidth = Math.min(newWidth, containerRect.right - newLeft);
+                newHeight = Math.min(newHeight, containerRect.bottom - newTop);
+
+                cropBox.style.left = `${Math.min(containerRect.width,newLeft - containerRect.left)}px`;
+                cropBox.style.top = `${Math.min(containerRect.height,newTop - containerRect.top)}px`;
+                cropBox.style.width = `${newWidth}px`;
+                cropBox.style.height = `${newHeight}px`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                currentHandle = null;
+            });
+
+            cropBox.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('resize-handle')) return;
+                const startX = e.clientX - cropBox.offsetLeft;
+                const startY = e.clientY - cropBox.offsetTop;
+
+                function onMouseMove(e) {
+                    const containerRect = preview.getBoundingClientRect();
+                    let newLeft = e.clientX - startX;
+                    let newTop = e.clientY - startY;
+
+                    newLeft = Math.max(0, Math.min(newLeft, containerRect.width - cropBox.offsetWidth));
+                    newTop = Math.max(0, Math.min(newTop, containerRect.height - cropBox.offsetHeight));
+
+                    cropBox.style.left = `${newLeft}px`;
+                    cropBox.style.top = `${newTop}px`;
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            applyCropBtn.addEventListener('click', () => {
+                const imgRect = preview.getBoundingClientRect();
+                const cropRect = cropBox.getBoundingClientRect();
+                x = (cropRect.left - imgRect.left) / imgRect.width
+                y = (cropRect.top - imgRect.top) / imgRect.height
+                w = cropRect.width / imgRect.width
+                h = cropRect.height / imgRect.height
+                resizeDivider();
+                document.querySelectorAll('.filter-preview').forEach(filterPreview => {
+                    const filter = filterPreview.dataset.filter;
+                    document.getElementById(filter).src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${filter}&split=100&angle=0&vert=0&hori=0&x=${x}&y=${y}&w=${w}&h=${h}`;
+                })
+                isCropping = !isCropping;
+                cropBox.style.display = isCropping ? 'block' : 'none';
+                applyCropBtn.style.display = isCropping ? 'block' : 'none';
+                toggleCropBtn.style.display = !isCropping ? 'block' : 'none';
+            });
+        });
     </script>
 </body>
 </html>

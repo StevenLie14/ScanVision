@@ -87,7 +87,7 @@
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="image-grid">
                 {% for image in docs.images %}
                     <div class="bg-purple-900/20 rounded-xl overflow-hidden card-hover border border-purple-900/30 flex flex-col">
-                        <div class="relative h-[640px] overflow-y-auto">
+                        <div class="relative max-h-[640px] overflow-y-auto">
                             <img 
                                 src="{{ url_for('static', filename=image.path) }}" 
                                 alt="Document page {{ image.file_number }}" 
@@ -139,4 +139,72 @@
     {% endwith %}
 </script>
 <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+<script>
+    const uploadFile = (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('document_id', '{{ docs.id }}');
+
+        fetch('/docs/add/'+ '{{ docs.id }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            toastr.error('Error uploading image');
+        });
+    }
+    
+    const downloadDocs = () => {
+        fetch('/docs/download/' + '{{ docs.id }}', {
+            method: 'GET',
+        })
+        .then(response => response.blob()) 
+        .then(blob => { 
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob); 
+            link.download = '{{docs.name}}.pdf'; 
+            link.click();  
+        })
+        .catch(error => {
+            console.log('Error:', error);
+            toastr.error('Error downloading document');
+        });
+    }
+
+    const toggleEdit = () => {
+        const nameDisplay = document.getElementById('doc-name');
+        const nameInput = document.getElementById('name-input');
+
+        if (nameInput.classList.contains('hidden')) {
+            nameDisplay.classList.add('hidden');
+            nameInput.classList.remove('hidden');
+            nameInput.focus();
+        } else {
+            nameDisplay.classList.remove('hidden');
+            nameInput.classList.add('hidden');
+
+            fetch('/docs/edit/' + '{{ docs.id }}', {
+                method: 'POST',
+                headers : {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: nameInput.value }),
+            }).then(response => response.json())
+            .then(response => {
+                nameDisplay.textContent = nameInput.value
+                console.log('Updated successfully')
+                toastr.success('Updated Successfully')
+            })
+            .catch(err => {
+                console.error(err)
+                toastr.error('Update Failed')
+            });
+        }
+    }
+</script>
 </html>

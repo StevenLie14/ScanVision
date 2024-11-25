@@ -153,6 +153,15 @@ def image_filter(id):
     if img is None:
         return jsonify({"message": "Image not found"}), 404
     
+    x = float(request.args.get('x'))*img.shape[1] if request.args.get('x') else None
+    y = float(request.args.get('y'))*img.shape[0] if request.args.get('y') else None
+    w = float(request.args.get('w'))*img.shape[1] if request.args.get('w') else None
+    h = float(request.args.get('h'))*img.shape[0] if request.args.get('h') else None
+    
+    if x is not None and y is not None and w is not None and h is not None:
+        img = img[int(y):int(y+h), int(x):int(x+w)]
+        
+        
     filter_type = request.args.get('filter')
     filtered_img = getFilteredImage(img, filter_type)
     
@@ -163,14 +172,15 @@ def image_filter(id):
         split_ratio = 0 
         
     
+        
+    
 
     split_ratio = max(0, min(split_ratio, 100))
-
-    
     
     angle_type = request.args.get('angle',default=0)
     hori_flip = int(request.args.get('hori',default=0))
     vert_flip = int(request.args.get('vert',default=0))
+    
     
     img = rotate_image(img,angle_type,hori_flip,vert_flip)
     
@@ -264,6 +274,7 @@ def ocr(id):
     img_io = io.BytesIO(buffer)
 
     return render_template('ocr.html', ocr_img=base64.b64encode(img_io.getvalue()).decode('utf-8'), ocr_text=txts, ocr_box=boxes,image=image)
+
 
     
     
