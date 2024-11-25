@@ -65,10 +65,11 @@ def rotate_image(image,angle,hori_flip=0,vert_flip=0):
     return image
 
 def preprocess(img,x,y,w,h,width,height):
-    if width is not None and height is not None:
-        img = cv2.resize(img, (int(width), int(height)))
+    print(x,y,w,h,width,height)
     if x is not None and y is not None and w is not None and h is not None:
         img = img[int(y):int(y+h), int(x):int(x+w)]
+    if width is not None and height is not None:
+        img = cv2.resize(img, (int(width), int(height)))
     return img
         
 @image_controller.route('/<id>', methods=['GET', 'DELETE','POST'])
@@ -89,10 +90,10 @@ def edit(id):
         width = int(request.args.get('width')) if request.args.get('width') else None
         height = int(request.args.get('height')) if request.args.get('height') else None 
         
-        x = float(request.args.get('x'))*img.shape[1] if request.args.get('x') else None
-        y = float(request.args.get('y'))*img.shape[0] if request.args.get('y') else None
-        w = float(request.args.get('w'))*img.shape[1] if request.args.get('w') else None
-        h = float(request.args.get('h'))*img.shape[0] if request.args.get('h') else None
+        x = float(request.args.get('x')) if request.args.get('x') else None
+        y = float(request.args.get('y')) if request.args.get('y') else None
+        w = float(request.args.get('w')) if request.args.get('w') else None
+        h = float(request.args.get('h')) if request.args.get('h') else None
         
         img = preprocess(img,x,y,w,h,width,height)
             
@@ -112,16 +113,7 @@ def edit(id):
         vert_flip = int(request.args.get('vert',default=0))
         img = rotate_image(img,angle_type,hori_flip,vert_flip)
         
-        filtered_img = rotate_image(filtered_img,angle_type,hori_flip,vert_flip)
-        
-        
         filtered_img = getFilteredImage(img, request.args.get('filter'))
-        angle_type = request.args.get('angle',default=0)
-        hori_flip = int(request.args.get('hori',default=0))
-        vert_flip = int(request.args.get('vert',default=0))
-        
-        
-        filtered_img = rotate_image(filtered_img,angle_type,hori_flip,vert_flip)
         
         cv2.imwrite(image_path, filtered_img)
         
@@ -192,10 +184,10 @@ def image_filter(id):
     width = int(request.args.get('width')) if request.args.get('width') else None
     height = int(request.args.get('height')) if request.args.get('height') else None 
     
-    x = float(request.args.get('x'))*img.shape[1] if request.args.get('x') else None
-    y = float(request.args.get('y'))*img.shape[0] if request.args.get('y') else None
-    w = float(request.args.get('w'))*img.shape[1] if request.args.get('w') else None
-    h = float(request.args.get('h'))*img.shape[0] if request.args.get('h') else None
+    x = float(request.args.get('x')) if request.args.get('x') else None
+    y = float(request.args.get('y')) if request.args.get('y') else None
+    w = float(request.args.get('w')) if request.args.get('w') else None
+    h = float(request.args.get('h')) if request.args.get('h') else None
     
     img = preprocess(img,x,y,w,h,width,height)
         

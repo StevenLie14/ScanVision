@@ -14,6 +14,7 @@
             position: absolute;
             border: 2px solid white;
             box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+            z-index: 10;
         }
         .resize-handle {
             position: absolute;
@@ -78,12 +79,12 @@
         </div>
 
         <div class="relative bg-gray-800 rounded-lg p-4 flex justify-center items-center min-h-[300px] md:min-h-[500px]">
-            <div class="relative w-full min-h-[300px] md:min-h-[500px] h-full flex items-center justify-center" id="image-container">
+            <div class="relative w-full h-full flex items-center justify-center" id="image-container">
                 <img
                     id="preview"
                     src="{{ url_for('image_controller.image_filter', id=image.id) }}?filter=original&split=0"
-                    alt="Image preview with adjustable split"
-                    class="max-w-full h-auto object-contain"
+                    alt="Image preview"
+                    class="max-w-full object-fill"
                 >
                 <div id="resizable-container" class="absolute">
                     <div 
@@ -131,7 +132,7 @@
                 <div class="flex gap-4 px-8">
                     <div class="filter-preview flex-none" data-filter="original">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="original" src="/placeholder.svg" alt="Original" class="w-full h-full object-cover">
+                            <img id="original" alt="Original" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Original
                             </div>
@@ -139,7 +140,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="grayscale">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="grayscale" src="/placeholder.svg" alt="grayscale" class="w-full h-full object-cover">
+                            <img id="grayscale" alt="grayscale" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
            
                      GrayScale
@@ -148,7 +149,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="enhance">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="enhance" src="/placeholder.svg" alt="Enhance" class="w-full h-full object-cover">
+                            <img id="enhance" alt="Enhance" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Enhance
                             </div>
@@ -156,7 +157,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="bw">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="bw" src="/placeholder.svg" alt="B&W" class="w-full h-full object-cover">
+                            <img id="bw" alt="B&W" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 B&W
                             </div>
@@ -164,7 +165,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="invert">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="invert" src="/placeholder.svg" alt="B&W" class="w-full h-full object-cover">
+                            <img id="invert" alt="B&W" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Invert
                             </div>
@@ -172,7 +173,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="equ">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="equ" src="/placeholder.svg" alt="equ" class="w-full h-full object-cover">
+                            <img id="equ" alt="equ" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Equalize Histogram
                             </div>
@@ -180,7 +181,7 @@
                     </div>
                     <div class="filter-preview flex-none" data-filter="manequ">
                         <div class="relative w-32 aspect-square rounded-lg overflow-hidden bg-gray-800">
-                            <img id="manequ" src="/placeholder.svg" alt="equ" class="w-full h-full object-cover">
+                            <img id="manequ" alt="equ" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-50 p-2 text-center text-sm">
                                 Manual Equalize Histogram
                             </div>
@@ -201,10 +202,10 @@
             <div class="bg-gray-800 rounded-lg p-4 space-y-4">
                 <h2 class="text-xl font-semibold mb-4">Transform</h2>
                 <div class="grid grid-cols-1 gap-4">
-                    <button id="toggleCrop" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+                    <button id="toggleCrop" class="bg-purple-700 hover:bg-purple-600 p-2 rounded-lg z-20">
                         <i class="fas fa-crop mr-2"></i>Toggle Crop
                     </button>
-                    <button id="applyCrop" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg hidden">
+                    <button id="applyCrop" class="bg-purple-700 hover:bg-purple-600 p-2 rounded-lg hidden z-20">
                         <i class="fas fa-check mr-2"></i>Apply Crop
                     </button>
                     <button id="rotateLeft" class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
@@ -269,7 +270,6 @@
         let height = preview.offsetHeight;
 
         const resizeDivider = () => {
-            console.log(activeFilter, split, angle_type, vertFlip, horiFlip)
             preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${split}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}&x=${x}&y=${y}&w=${xw}&h=${yh}&width=${width}&height=${height}`
             preview.onload = () => {
                 dividerContainer.style.height = `${preview.offsetHeight}px`;
@@ -338,7 +338,8 @@
                 activeFilter = filter;
                 slider.value= 0
                 divider.style.left = `${0}%`;
-                preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${100}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}&x=${x}&y=${y}&w=${xw}&h=${yh}&width=${width}&height=${height}`
+                split = 100
+                preview.src = `{{ url_for('image_controller.image_filter', id = image.id) }}?filter=${activeFilter}&split=${split}&angle=${angle_type}&vert=${vertFlip ? 1 : 0}&hori=${horiFlip ? 1:0}&x=${x}&y=${y}&w=${xw}&h=${yh}&width=${width}&height=${height}`
                 
 
                 
@@ -426,7 +427,6 @@
                 isCropping = !isCropping;
                 cropBox.style.display = isCropping ? 'block' : 'none';
                 applyCropBtn.style.display = isCropping ? 'block' : 'none';
-                toggleCropBtn.style.display = !isCropping ? 'block' : 'none';
                 if (isCropping) {
                     initCropBox();
                 }
@@ -525,10 +525,10 @@
             applyCropBtn.addEventListener('click', () => {
                 const imgRect = preview.getBoundingClientRect();
                 const cropRect = cropBox.getBoundingClientRect();
-                x = (cropRect.left - imgRect.left) / imgRect.width
-                y = (cropRect.top - imgRect.top) / imgRect.height
-                xw = cropRect.width / imgRect.width
-                yh = cropRect.height / imgRect.height
+                x = cropRect.left - imgRect.left;
+                y = cropRect.top - imgRect.top;
+                xw = cropRect.width
+                yh = cropRect.height
                 resizeDivider();
                 document.querySelectorAll('.filter-preview').forEach(filterPreview => {
                     const filter = filterPreview.dataset.filter;
@@ -537,7 +537,28 @@
                 isCropping = !isCropping;
                 cropBox.style.display = isCropping ? 'block' : 'none';
                 applyCropBtn.style.display = isCropping ? 'block' : 'none';
-                toggleCropBtn.style.display = !isCropping ? 'block' : 'none';
+            });
+
+            window.addEventListener('resize', () => {
+                const containerRect = preview.getBoundingClientRect();
+
+                const rect = cropBox.getBoundingClientRect();
+
+
+                let newLeft = rect.left;
+                let newTop = rect.top;
+                let newWidth = rect.width;
+                let newHeight = rect.height;
+
+                newLeft = Math.max(containerRect.left, Math.min(newLeft, containerRect.right - newWidth));
+                newTop = Math.max(containerRect.top, Math.min(newTop, containerRect.bottom - newHeight));
+                newWidth = Math.min(newWidth, containerRect.right - newLeft);
+                newHeight = Math.min(newHeight, containerRect.bottom - newTop);
+
+                cropBox.style.left = `${Math.min(containerRect.width,newLeft - containerRect.left)}px`;
+                cropBox.style.top = `${Math.min(containerRect.height,newTop - containerRect.top)}px`;
+                cropBox.style.width = `${newWidth}px`;
+                cropBox.style.height = `${newHeight}px`;
             });
         });
     </script>

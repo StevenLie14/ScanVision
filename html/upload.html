@@ -200,11 +200,7 @@
         const nameDisplay = document.getElementById('doc-name');
         const nameInput = document.getElementById('name-input');
 
-        if (nameInput.classList.contains('hidden')) {
-            nameDisplay.classList.add('hidden');
-            nameInput.classList.remove('hidden');
-            nameInput.focus();
-        } else {
+        nameInput.onblur = () => {
             nameDisplay.classList.remove('hidden');
             nameInput.classList.add('hidden');
 
@@ -216,15 +212,28 @@
                 body: JSON.stringify({ name: nameInput.value }),
             }).then(response => response.json())
             .then(response => {
-                nameDisplay.textContent = nameInput.value
-                console.log('Updated successfully')
-                toastr.success('Updated Successfully')
+                window.location.reload();
             })
             .catch(err => {
                 console.error(err)
                 toastr.error('Update Failed')
             });
         }
+
+        if (nameInput.classList.contains('hidden')) {
+            nameDisplay.classList.add('hidden');
+            nameInput.classList.remove('hidden');
+            nameInput.focus();
+            nameInput.addEventListener('keydown', function handleEnter(event) {
+                if (event.key === 'Enter') {
+                    nameInput.blur();
+                    nameInput.removeEventListener('keydown', handleEnter);
+                }
+            });
+        } else {
+            nameInput.blur();
+        }
     }
+    
 </script>
 </html>

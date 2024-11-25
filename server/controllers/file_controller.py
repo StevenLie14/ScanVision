@@ -193,11 +193,13 @@ def change_docs_name(id):
     
     name = request.json.get('name')
     if not name or name== "":
+        flash('Invalid name provided', 'error')
         return jsonify({"error": "Invalid name provided"}), 400
     
     doc.name = name
     doc.updated_at = datetime.now()
     db.session.add(doc)
     db.session.commit()
+    flash('Document name updated successfully', 'success')
     return jsonify({"message": "Document name updated successfully", "new_name": doc.name}), 200
     
