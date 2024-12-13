@@ -1,7 +1,7 @@
 import uuid
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from server.app import db
+from app import db
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'

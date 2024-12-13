@@ -1,5 +1,5 @@
 import uuid
-from server.app import db
+from app import db
 
 class Document(db.Model):
     __tablename__ = 'documents'

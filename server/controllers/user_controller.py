@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required,current_user
-from server.models.user import User
-from server.app import db
+from models.user import User
+from app import db
 from werkzeug.security import check_password_hash, generate_password_hash
 
 user_controller = Blueprint('user_controller', __name__)  

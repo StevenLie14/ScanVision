@@ -52,43 +52,21 @@
             window.location.href = `/docs/${docId}`
         }
 
-        function updateOverlayPositions() {
-            const imgContainer = document.querySelector('.relative.inline-block');
-            const img = document.getElementById('preview');
-            const overlay = document.getElementById('ocr-overlay');
-            const boxes = overlay.querySelectorAll('div');
-
-            const scaleX = img.width / img.naturalWidth;
-            const scaleY = img.height / img.naturalHeight;
-
-            overlay.style.width = `${img.width}px`;
-            overlay.style.height = `${img.height}px`;
-
-            boxes.forEach(box => {
-                const x = parseFloat(box.dataset.x) * scaleX;
-                const y = parseFloat(box.dataset.y) * scaleY;
-                const width = parseFloat(box.dataset.width) * scaleX;
-                const height = parseFloat(box.dataset.height) * scaleY;
-
-                box.style.left = `${x}px`;
-                box.style.top = `${y}px`;
-                box.style.width = `${width}px`;
-                box.style.height = `${height}px`;
-            });
-        }
-
-        window.addEventListener('load', updateOverlayPositions);
-        window.addEventListener('resize', updateOverlayPositions);
 
         document.getElementById('copyOcrText').addEventListener('click', function() {
-            const ocr_text = {{ ocr_text | tojson }};
-            const allText = ocr_text.join('\n');
+            const ocr_texter = {{ ocr_text | tojson }}
+            const allText = ocr_texter.join('\n');
 
-            navigator.clipboard.writeText(allText).then(() => {
-                toastr.success('Copied to clipboard');
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-            });
+            if (navigator.clipboard === undefined) {
+                toastr.error('Clipboard API is not supported in this browser.');
+                return;
+                navigator.clipboard.writeText(allText).then(() => {
+                    toastr.success('Copied to clipboard');
+                }).catch(err => {
+                    toastr.error('Failed to copy text: ', err);
+                });
+            }
+
         });
     </script>
 </body>

@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash,jsonify, send_file,send_from_directory
 from flask_login import login_required
 from datetime import datetime
-from server.models.document import Document
-from server.models.image import Image
-from server.app import db
+from models.document import Document
+from models.image import Image
+from app import db
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import uuid
 import numpy as np
@@ -75,7 +77,7 @@ def preprocess(img,x,y,w,h,width,height):
 @image_controller.route('/<id>', methods=['GET', 'DELETE','POST'])
 @login_required
 def edit(id):
-    from server.main import app
+    from main import app
     if request.method == 'POST':
         image = Image.query.filter_by(id=id).first()
         if not image:

@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash,jsonify, send_file
 from flask_login import login_user, logout_user, login_required,current_user
 from datetime import datetime
-from server.models.document import Document
-from server.models.image import Image
-from server.models.user import User
-from server.app import db
+from models.document import Document
+from models.image import Image
+from models.user import User
+from app import db
 import fitz
 import uuid
 import os
@@ -72,8 +72,8 @@ def download_docs(id):
 
 @file_controller.route('/upload', methods=['POST'])
 def upload_file():
-    from server.main import app
-    from server.app import db
+    from main import app
+    from app import db
     
     if current_user.is_authenticated == False:
         return jsonify({"error" : "Not Authenticated"}),401
@@ -128,8 +128,8 @@ def upload_file():
 @file_controller.route('/add/<id>', methods=['POST'])
 @login_required
 def add_image(id):
-    from server.main import app
-    from server.app import db
+    from main import app
+    from app import db
     if 'file' not in request.files:
         flash('No file part', 'error')
         return jsonify({"error": "No file part"}), 400
