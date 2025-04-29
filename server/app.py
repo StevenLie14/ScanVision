@@ -17,20 +17,17 @@ def create_app():
 
     app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER')
     app.secret_key = os.getenv('SECRET_KEY')
+    connection = os.getenv('CONNECTION_STRING')
     
-    app.config['SQLALCHEMY_DATABASE_URI'] = (
-        f"mysql+pymysql://{os.getenv('DB_USER')}:" 
-        f"{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:3306/"
-        f"{os.getenv('DB_NAME')}"
-    )
+    app.config['SQLALCHEMY_DATABASE_URI'] = connection
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     try:
         db.init_app(app)
-    except Exception:
-        print(Exception)
+    except Exception as e:
+        print(e)
     
     login_manager = LoginManager(app)
     login_manager.login_view = 'user_controller.login'

@@ -4,11 +4,8 @@ services:
   db:
     image: mysql:8.0
     restart: always
-    environment:
-      MYSQL_DATABASE: 'docs'
-      MYSQL_USER: 'user'
-      MYSQL_PASSWORD: 'password'
-      MYSQL_ROOT_PASSWORD: 'root'
+    env_file:
+      - .env
     ports:
       - '3306:3306'
     expose:
@@ -28,20 +25,10 @@ services:
       - "5500:5500"
     networks:
       - my-network
-    environment:
-      - FLASK_APP=server.main
-      - FLASK_ENV=development
-      - FLASK_DEBUG=False
-      - UPLOAD_FOLDER=static/uploads/
-      - IMAGE_FOLDER=uploads/
-      - SECRET_KEY=compvis0812
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASSWORD=root
-      - DB_NAME=docs
+    env_file:
+      - .env
     volumes:
       - .:/app
-
 
 networks:
   my-network:

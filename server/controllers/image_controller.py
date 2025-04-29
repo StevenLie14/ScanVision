@@ -13,8 +13,8 @@ import io
 from io import BytesIO
 import os
 import cv2
-import pytesseract
-from pytesseract import Output
+# import pytesseract
+# from pytesseract import Output
 from paddleocr import PaddleOCR, draw_ocr
 from PIL import Image as Pil_Image
 import base64
