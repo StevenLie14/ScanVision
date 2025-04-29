@@ -54,8 +54,7 @@ def download_docs(id):
         image_path = os.path.join('static', image.path)
         img = fitz.open(image_path)
         if img is None:
-            print('nt')
-        print(img)
+            return jsonify({"message": "Document not found"}), 404 
         pdf.insert_file(img)
         
     pdf_bytes = io.BytesIO()

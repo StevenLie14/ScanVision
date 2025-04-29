@@ -67,7 +67,6 @@ def rotate_image(image,angle,hori_flip=0,vert_flip=0):
     return image
 
 def preprocess(img,x,y,w,h,width,height):
-    print(x,y,w,h,width,height)
     if x is not None and y is not None and w is not None and h is not None:
         img = img[int(y):int(y+h), int(x):int(x+w)]
     if width is not None and height is not None:
@@ -143,7 +142,6 @@ def edit(id):
         if not remaining_images:
             db.session.delete(document)
             db.session.commit()
-            print(os.path.join('static',folder_path, document.id))
             
             if os.path.exists(os.path.join('static',folder_path, document.id)):
                 os.rmdir(os.path.join('static',folder_path, document.id))
